@@ -1,0 +1,34 @@
+# Vaidhyashala Backend Implementation Checklist
+
+- `[x]` Setup & configuration of GCP resources (In parallel with user)
+- `[x]` Update `pom.xml` with Google Cloud, JWT, PostgreSQL, and validation dependencies
+- `[x]` Database Connection & Secrets Config
+  - `[x]` Configure Spring Boot datasource settings in `application.yml`
+  - `[x]` Configure connection using GCP Secret Manager
+- `[x]` Database Entities (POJOs)
+  - `[x]` Implement `User` entity
+  - `[x]` Implement `CustomerProfile` entity
+  - `[x]` Implement `Address` entity
+  - `[x]` Implement `Appointment` entity
+  - `[x]` Implement `EmailNotification` entity
+- `[x]` Repositories Layer
+  - `[x]` Implement JpaRepository interfaces for all entities
+- `[x]` Security Layer & Auth
+  - `[x]` Configure Spring Security Filter Chain
+  - `[x]` Implement JWT Token Utility (`JwtTokenProvider`) and Filter (`JwtAuthenticationFilter`)
+  - `[x]` Setup BCrypt Password Encoder
+  - `[x]` Implement UserDetailsService
+- `[x]` Customer Management Services & Controllers
+  - `[x]` DTOs (Register, Login, Profile)
+  - `[x]` AuthController & AuthService
+  - `[x]` CustomerController & CustomerService
+- `[x]` Google Calendar Integration
+  - `[x]` Implement GCal integration service using Google APIs Client
+- `[x]` Appointment & Scheduling Logic
+  - `[x]` Appointment Service (Slot checking & validation)
+  - `[x]` Appointment Controller
+- `[x]` Notifications & Schedulers
+  - `[x]` Integration with Email Service (Async)
+  - `[x]` Background scheduler for email reminders
+- `[x]` Global Exception Handling & Input Validation
+- `[ ]` Verification & Automated Tests

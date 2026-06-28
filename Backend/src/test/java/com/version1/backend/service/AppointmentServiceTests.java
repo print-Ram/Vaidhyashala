@@ -1,6 +1,7 @@
 package com.version1.backend.service;
 
 import com.version1.backend.dto.AppointmentCreateDto;
+import com.version1.backend.dto.CalendarEventResult;
 import com.version1.backend.exception.CustomException;
 import com.version1.backend.pojo.*;
 import com.version1.backend.repository.AddressRepository;
@@ -96,7 +97,7 @@ public class AppointmentServiceTests {
     @Test
     void testCreateAppointmentSuccess() {
         Mockito.when(googleCalendarService.createEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.anyString()))
-                .thenReturn("gcal-event-123");
+                .thenReturn(new CalendarEventResult("gcal-event-123", null));
 
         AppointmentCreateDto dto = new AppointmentCreateDto();
         dto.setProviderId(provider.getId());
@@ -114,7 +115,7 @@ public class AppointmentServiceTests {
     @Test
     void testCreateAppointmentOverlapConflict() {
         Mockito.when(googleCalendarService.createEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.anyString()))
-                .thenReturn("gcal-event-123");
+                .thenReturn(new CalendarEventResult("gcal-event-123", null));
 
         LocalDateTime time = LocalDateTime.now().plusDays(2);
 
