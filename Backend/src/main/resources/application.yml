@@ -1,0 +1,108 @@
+# =============================================
+# Vaidhyashala Backend - Application Configuration
+# =============================================
+
+spring:
+  application:
+    name: vaidhyashala-backend
+
+  # ---- JPA / Hibernate ----
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  # ---- Mail Configuration ----
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# ---- Application Custom Properties ----
+app:
+  jwt:
+    secret: ${JWT_SECRET:dGhpc2lzYXZlcnlzZWN1cmVhbmRsYXJnZWJhc2U2NHNpZ25pbmdrZXlmb3J2YWlkaHlhc2hhbGFkZXZlbG9wbWVudA==}
+    expiration-ms: 900000        # 15 minutes
+  google:
+    credentials:
+      json: ${GOOGLE_CREDENTIALS_JSON:}
+    calendar:
+      id: ${GOOGLE_CALENDAR_ID:primary}
+  scheduler:
+    reminder-cron: "0 */15 * * * *"   # Every 15 minutes
+
+# ---- Spring AI (Gemini) ----
+spring.ai:
+  google:
+    genai:
+      api-key: ${GEMINI_API_KEY:}
+
+---
+# =============================================
+# Profile: local (for local development with H2)
+# =============================================
+spring:
+  config:
+    activate:
+      on-profile: local
+  cloud:
+    gcp:
+      enabled: false
+      core:
+        enabled: false
+      secretmanager:
+        enabled: false
+  datasource:
+    url: jdbc:h2:file:./data/vaidhyashala;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  ai:
+    google:
+      genai:
+        api-key: dummy-api-key-for-local-testing
+app:
+  google:
+    calendar:
+      id: mssreeram65@gmail.com
+      invite-attendees: false
+
+---
+# =============================================
+# Profile: gcp (for Google Cloud SQL PostgreSQL)
+# =============================================
+spring:
+  config:
+    activate:
+      on-profile: gcp
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:vaidhyashala}
+    username: ${DB_USERNAME:}
+    password: ${DB_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
