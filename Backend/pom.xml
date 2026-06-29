@@ -12,7 +12,8 @@
 	<artifactId>backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name/>
-	<description/>
+	<!-- Trigger deploy run 6 -->
+	<description>Vaidhyashala Backend API Service</description>
 	<url/>
 	<licenses>
 		<license/>
