@@ -35,7 +35,9 @@ jobs:
           cache: maven
 
       - name: 🔨 Build with Maven (skip tests for speed)
-        run: ./mvnw package -DskipTests -q
+        run: |
+          chmod +x mvnw
+          ./mvnw package -DskipTests -q
 
       - name: ✅ Verify JAR exists
         run: ls -lh target/*.jar
@@ -74,7 +76,9 @@ jobs:
           cache: maven
 
       - name: 📦 Build JAR
-        run: ./mvnw package -DskipTests -q
+        run: |
+          chmod +x mvnw
+          ./mvnw package -DskipTests -q
 
       - name: 🐳 Build Docker image
         run: |
