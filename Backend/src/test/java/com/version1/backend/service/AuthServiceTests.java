@@ -19,13 +19,8 @@ import com.version1.backend.repository.EmailNotificationRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-
 @SpringBootTest
 @ActiveProfiles("local")
-@EnableAutoConfiguration(exclude = {
-    org.springframework.cloud.autoconfigure.RefreshAutoConfiguration.class
-})
 public class AuthServiceTests {
 
     @Autowired

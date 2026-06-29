@@ -17,7 +17,7 @@ RUN ./mvnw dependency:go-offline -q
 
 # Copy source and build
 COPY src ./src
-RUN ./mvnw package -DskipTests -q
+RUN ./mvnw package -Dmaven.test.skip=true -q
 
 # =============================================
 # Stage 2: Run with slim JRE image (~90MB)
