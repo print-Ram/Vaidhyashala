@@ -80,8 +80,8 @@ spring:
     activate:
       on-profile: cloud-run
   datasource:
-    # Cloud SQL uses Unix socket via Cloud SQL Proxy sidecar (auto-injected by Cloud Run)
-    url: jdbc:postgresql:///${DB_NAME:vaidhyashala}?cloudSqlInstance=${CLOUD_SQL_INSTANCE}&socketFactory=com.google.cloud.sql.postgres.SocketFactory
+    # Cloud SQL Socket Factory: uses Unix domain socket — no TCP, no public IP needed
+    url: jdbc:postgresql://google/${DB_NAME:vaidhyashala}?cloudSqlInstance=${CLOUD_SQL_INSTANCE}&socketFactory=com.google.cloud.sql.postgres.SocketFactory&ipTypes=PRIVATE,PUBLIC
     username: ${DB_USERNAME:vaidhyashala_user}
     password: ${DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
