@@ -1,6 +1,7 @@
 package com.version1.backend.service;
 
 import com.version1.backend.dto.AppointmentCreateDto;
+import com.version1.backend.dto.AppointmentResponseDto;
 import com.version1.backend.pojo.Appointment;
 
 import java.util.List;
@@ -11,4 +12,5 @@ public interface AppointmentService {
     List<Appointment> getAppointmentsByCustomerUserId(UUID customerUserId);
     List<Appointment> getAppointmentsByProviderId(UUID providerId);
     List<Appointment> getAllAppointments();
+    List<AppointmentResponseDto.ProviderInfo> getAllProviders();
 }

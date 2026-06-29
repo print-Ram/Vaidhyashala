@@ -72,6 +72,16 @@ public class AppointmentController {
     }
 
     /**
+     * GET /api/v1/appointments/providers
+     * Returns list of all available providers (id, name, email) for booking dropdowns.
+     */
+    @GetMapping("/providers")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'PROVIDER')")
+    public ResponseEntity<List<AppointmentResponseDto.ProviderInfo>> getProviders() {
+        return ResponseEntity.ok(appointmentService.getAllProviders());
+    }
+
+    /**
      * Maps an Appointment entity to AppointmentResponseDto.
      * @param appointment   The appointment entity.
      * @param includeCustomer Whether to include customer info (PROVIDER only).

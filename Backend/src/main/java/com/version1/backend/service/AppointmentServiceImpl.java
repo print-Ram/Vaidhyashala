@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import com.version1.backend.dto.AppointmentResponseDto;
 
 @Service
 public class AppointmentServiceImpl implements AppointmentService {
@@ -131,5 +133,13 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional(readOnly = true)
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AppointmentResponseDto.ProviderInfo> getAllProviders() {
+        return userRepository.findByRole(Role.PROVIDER).stream()
+                .map(user -> new AppointmentResponseDto.ProviderInfo(user.getId(), user.getEmail(), user.getEmail()))
+                .collect(Collectors.toList());
     }
 }
