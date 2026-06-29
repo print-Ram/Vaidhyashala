@@ -15,9 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.UUID;
 
-@SpringBootApplication(exclude = {
-		org.springframework.cloud.autoconfigure.RefreshAutoConfiguration.class
-})
+@SpringBootApplication
 @EnableAsync
 @EnableScheduling
 public class BackendApplication {
@@ -27,7 +25,7 @@ public class BackendApplication {
 	}
 
 	@Bean
-	@Profile("local")
+	@Profile({"local", "cloud-run"})
 	public CommandLineRunner seedDatabase(UserRepository userRepository, PasswordEncoder passwordEncoder) {
 		return args -> {
 			String email = "provider@vaidhyashala.com";

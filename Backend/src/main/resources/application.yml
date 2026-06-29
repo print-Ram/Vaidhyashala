@@ -6,14 +6,13 @@ spring:
   application:
     name: vaidhyashala-backend
 
-  # ---- JPA / Hibernate ----
+  # ---- JPA / Hibernate (base defaults) ----
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
   # ---- Mail Configuration ----
@@ -42,27 +41,14 @@ app:
   scheduler:
     reminder-cron: "0 */15 * * * *"   # Every 15 minutes
 
-# ---- Spring AI (Gemini) ----
-spring.ai:
-  google:
-    genai:
-      api-key: ${GEMINI_API_KEY:}
-
 ---
 # =============================================
-# Profile: local (for local development with H2)
+# Profile: local (H2 file DB for local dev)
 # =============================================
 spring:
   config:
     activate:
       on-profile: local
-  cloud:
-    gcp:
-      enabled: false
-      core:
-        enabled: false
-      secretmanager:
-        enabled: false
   datasource:
     url: jdbc:h2:file:./data/vaidhyashala;AUTO_SERVER=TRUE
     driver-class-name: org.h2.Driver
@@ -79,10 +65,6 @@ spring:
     console:
       enabled: true
       path: /h2-console
-  ai:
-    google:
-      genai:
-        api-key: dummy-api-key-for-local-testing
 app:
   google:
     calendar:
@@ -91,18 +73,31 @@ app:
 
 ---
 # =============================================
-# Profile: gcp (for Google Cloud SQL PostgreSQL)
+# Profile: cloud-run (Cloud SQL PostgreSQL on GCP)
 # =============================================
 spring:
   config:
     activate:
-      on-profile: gcp
+      on-profile: cloud-run
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:vaidhyashala}
-    username: ${DB_USERNAME:}
+    # Cloud SQL uses Unix socket via Cloud SQL Proxy sidecar (auto-injected by Cloud Run)
+    url: jdbc:postgresql:///${DB_NAME:vaidhyashala}?cloudSqlInstance=${CLOUD_SQL_INSTANCE}&socketFactory=com.google.cloud.sql.postgres.SocketFactory
+    username: ${DB_USERNAME:vaidhyashala_user}
     password: ${DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: ${PORT:8080}
+
+app:
+  google:
+    calendar:
+      id: ${GOOGLE_CALENDAR_ID:mssreeram65@gmail.com}
+      invite-attendees: true
