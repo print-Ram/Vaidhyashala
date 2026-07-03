@@ -6,6 +6,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import com.version1.backend.enums.NotificationStatus;
+import com.version1.backend.enums.NotificationType;
 
 @Entity
 @Table(name = "email_notifications")

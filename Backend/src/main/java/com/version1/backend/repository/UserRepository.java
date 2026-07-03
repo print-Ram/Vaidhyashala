@@ -1,6 +1,6 @@
 package com.version1.backend.repository;
 
-import com.version1.backend.pojo.Role;
+import com.version1.backend.enums.Role;
 import com.version1.backend.pojo.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

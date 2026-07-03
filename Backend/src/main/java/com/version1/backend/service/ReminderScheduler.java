@@ -2,7 +2,7 @@ package com.version1.backend.service;
 
 import com.version1.backend.pojo.CustomerProfile;
 import com.version1.backend.pojo.EmailNotification;
-import com.version1.backend.pojo.NotificationStatus;
+import com.version1.backend.enums.NotificationStatus;
 import com.version1.backend.repository.EmailNotificationRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

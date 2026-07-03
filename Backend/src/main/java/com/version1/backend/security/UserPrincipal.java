@@ -1,7 +1,7 @@
 package com.version1.backend.security;
 
 import com.version1.backend.pojo.User;
-import com.version1.backend.pojo.UserStatus;
+import com.version1.backend.enums.UserStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

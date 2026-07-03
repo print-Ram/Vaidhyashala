@@ -40,6 +40,10 @@ app:
       id: ${GOOGLE_CALENDAR_ID:primary}
   scheduler:
     reminder-cron: "0 */15 * * * *"   # Every 15 minutes
+  seed:
+    provider:
+      email: ${SEED_PROVIDER_EMAIL:}
+      password: ${SEED_PROVIDER_PASSWORD:}
 
 ---
 # =============================================

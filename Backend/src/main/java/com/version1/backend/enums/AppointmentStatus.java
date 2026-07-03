@@ -1,4 +1,4 @@
-package com.version1.backend.pojo;
+package com.version1.backend.enums;
 
 public enum AppointmentStatus {
     PENDING,

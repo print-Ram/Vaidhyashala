@@ -5,6 +5,8 @@ import com.version1.backend.dto.TokenResponseDto;
 import com.version1.backend.dto.UserRegistrationDto;
 import com.version1.backend.exception.CustomException;
 import com.version1.backend.pojo.*;
+import com.version1.backend.enums.Role;
+import com.version1.backend.enums.UserStatus;
 import com.version1.backend.repository.AddressRepository;
 import com.version1.backend.repository.CustomerProfileRepository;
 import com.version1.backend.repository.UserRepository;
@@ -91,6 +93,23 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwt = tokenProvider.generateToken(authentication);
+        String refreshToken = UUID.randomUUID().toString();
+
+        return TokenResponseDto.builder()
+                .accessToken(jwt)
+                .refreshToken(refreshToken)
+                .expiresIn(900)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public TokenResponseDto loginWithGoogle(String email) {
+        if (!userRepository.existsByEmail(email)) {
+            throw new CustomException("User not registered", HttpStatus.NOT_FOUND);
+        }
+
+        String jwt = tokenProvider.generateTokenFromEmail(email);
         String refreshToken = UUID.randomUUID().toString();
 
         return TokenResponseDto.builder()

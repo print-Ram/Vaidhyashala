@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import com.version1.backend.enums.AppointmentStatus;
 
 @Entity
 @Table(name = "appointments")

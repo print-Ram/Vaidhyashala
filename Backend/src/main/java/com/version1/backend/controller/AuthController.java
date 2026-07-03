@@ -1,6 +1,7 @@
 package com.version1.backend.controller;
 
 import com.version1.backend.dto.LoginRequestDto;
+import com.version1.backend.dto.GoogleLoginRequestDto;
 import com.version1.backend.dto.TokenResponseDto;
 import com.version1.backend.dto.UserRegistrationDto;
 import com.version1.backend.service.AuthService;
@@ -32,6 +33,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDto> authenticateUser(@Valid @RequestBody LoginRequestDto loginDto) {
         TokenResponseDto tokenResponse = authService.login(loginDto);
+        return ResponseEntity.ok(tokenResponse);
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<TokenResponseDto> authenticateGoogleUser(@Valid @RequestBody GoogleLoginRequestDto googleLoginDto) {
+        TokenResponseDto tokenResponse = authService.loginWithGoogle(googleLoginDto.getEmail());
         return ResponseEntity.ok(tokenResponse);
     }
 }

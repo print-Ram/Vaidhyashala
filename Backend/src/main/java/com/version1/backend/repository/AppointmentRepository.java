@@ -1,7 +1,7 @@
 package com.version1.backend.repository;
 
 import com.version1.backend.pojo.Appointment;
-import com.version1.backend.pojo.AppointmentStatus;
+import com.version1.backend.enums.AppointmentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

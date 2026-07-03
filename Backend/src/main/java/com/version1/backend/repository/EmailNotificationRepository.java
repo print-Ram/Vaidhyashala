@@ -1,7 +1,7 @@
 package com.version1.backend.repository;
 
 import com.version1.backend.pojo.EmailNotification;
-import com.version1.backend.pojo.NotificationStatus;
+import com.version1.backend.enums.NotificationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
