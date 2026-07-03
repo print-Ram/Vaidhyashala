@@ -6,11 +6,16 @@ export default function Logo({ className }: { className?: string }) {
     <Link
       href="/"
       className={cn(
-        "font-(family-name:--typography-label-mono-font-family) text-(length:--typography-headline-md-font-size) font-(--typography-headline-xl-font-weight)",
+        "flex flex-col items-start leading-none group cursor-pointer",
         className,
       )}
     >
-      Vaidhyashala
+      <span className="font-[family-name:var(--font-brand)] text-2xl font-extrabold text-indigo-600 tracking-wider transition-all group-hover:text-indigo-700 uppercase">
+        Vaidhyashala
+      </span>
+      <span className="text-[9px] font-mono tracking-widest text-slate-400 uppercase mt-1.5 font-medium">
+        Authentic Care, Simplified
+      </span>
     </Link>
   );
 }

@@ -3,12 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 export default function InfoSpecializations() {
   return (
     <>
-      <Card>
+      <Card className="border-slate-800/80 bg-slate-900/40 shadow-md">
         <CardHeader>
-          <CardTitle>Specializations</CardTitle>
+          <CardTitle className="text-lg text-slate-100 font-sans">Specializations</CardTitle>
         </CardHeader>
         <CardContent>
-          <ul>
+          <ul className="flex flex-wrap gap-2.5">
             <SpecializationSlot title="Diabetes" />
             <SpecializationSlot title="Thyroid" />
             <SpecializationSlot title="PCOS" />
@@ -22,10 +22,9 @@ export default function InfoSpecializations() {
 
 function SpecializationSlot({ title }: { title: string }) {
   return (
-    <>
-      <li className="flex flex-col my-4 bg-(--gray-400) w-fit px-3 py-2 rounded-[10px]">
-        <span>{title}</span>
-      </li>
-    </>
+    <li className="bg-indigo-50 border border-indigo-100 text-indigo-700 font-mono text-xs px-3.5 py-1.5 rounded-full hover:bg-indigo-100/60 transition-colors cursor-default font-medium">
+      {title}
+    </li>
   );
 }
+

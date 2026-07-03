@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
+    "@react-oauth/google": "^0.13.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^1.21.0",
     "next": "16.2.9",
     "radix-ui": "^1.6.0",

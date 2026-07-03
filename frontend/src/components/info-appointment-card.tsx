@@ -1,3 +1,7 @@
+"use client";
+
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import PrimaryButton from "./primary-button";
 import {
   Card,
@@ -17,19 +21,36 @@ import {
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 
 export default function InfoAppointmentCard() {
+  const router = useRouter();
+  const [mode, setMode] = useState<string>("video");
+
+  const handleCheckAvailability = () => {
+    const token = localStorage.getItem("accessToken");
+    const targetPath = `/book-appointment?mode=${mode}`;
+    if (token) {
+      router.push(targetPath);
+    } else {
+      router.push(`/login?redirect=${encodeURIComponent(targetPath)}`);
+    }
+  };
+
   return (
     <>
-      <Card>
+      <Card className="border-slate-200 bg-white shadow-sm">
         <CardHeader>
-          <CardTitle className="text-[1.3rem] font-sans">
+          <CardTitle className="text-lg text-slate-800 font-semibold font-sans">
             Book Appointment
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-slate-500 text-xs">
             Select your preferred consultation mode to proceed
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <RadioGroup defaultValue="video" className="max-w-sm">
+          <RadioGroup 
+            value={mode} 
+            onValueChange={setMode} 
+            className="max-w-sm"
+          >
             <FieldLabel htmlFor="video">
               <Field orientation="horizontal">
                 <FieldContent>
@@ -51,9 +72,12 @@ export default function InfoAppointmentCard() {
           </RadioGroup>
         </CardContent>
         <CardFooter>
-          <PrimaryButton>Check Availability</PrimaryButton>
+          <PrimaryButton onClick={handleCheckAvailability}>
+            Check Availability
+          </PrimaryButton>
         </CardFooter>
       </Card>
     </>
   );
 }
+

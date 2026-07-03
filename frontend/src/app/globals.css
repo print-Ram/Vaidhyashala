@@ -10,23 +10,17 @@
   /* headline-xl → text-headline-xl */
   --text-headline-xl: var(--typography-headline-xl-font-size);
   --text-headline-xl--line-height: var(--typography-headline-xl-line-height);
-  --text-headline-xl--letter-spacing: var(
-    --typography-headline-xl-letter-spacing
-  );
+  --text-headline-xl--letter-spacing: var(--typography-headline-xl-letter-spacing);
   --text-headline-xl--font-weight: var(--typography-headline-xl-font-weight);
   /* headline-lg → text-headline-lg */
   --text-headline-lg: var(--typography-headline-lg-font-size);
   --text-headline-lg--line-height: var(--typography-headline-lg-line-height);
-  --text-headline-lg--letter-spacing: var(
-    --typography-headline-lg-letter-spacing
-  );
+  --text-headline-lg--letter-spacing: var(--typography-headline-lg-letter-spacing);
   --text-headline-lg--font-weight: var(--typography-headline-lg-font-weight);
   /* headline-md → text-headline-md */
   --text-headline-md: var(--typography-headline-md-font-size);
   --text-headline-md--line-height: var(--typography-headline-md-line-height);
-  --text-headline-md--letter-spacing: var(
-    --typography-headline-md-letter-spacing
-  );
+  --text-headline-md--letter-spacing: var(--typography-headline-md-letter-spacing);
   --text-headline-md--font-weight: var(--typography-headline-md-font-weight);
   /* copy-lg → text-copy-lg */
   --text-copy-lg: var(--typography-copy-lg-font-size);
@@ -43,9 +37,7 @@
   /* label-mono → text-label-mono */
   --text-label-mono: var(--typography-label-mono-font-size);
   --text-label-mono--line-height: var(--typography-label-mono-line-height);
-  --text-label-mono--letter-spacing: var(
-    --typography-label-mono-letter-spacing
-  );
+  --text-label-mono--letter-spacing: var(--typography-label-mono-letter-spacing);
   --text-label-mono--font-weight: var(--typography-label-mono-font-weight);
   /* button-text → text-button-text */
   --text-button-text: var(--typography-button-text-font-size);
@@ -101,40 +93,64 @@
      --------------------------------------------------------------------- */
 
   /* Grays — surface scale (lightest to darkest) */
-  --white: #ffffff; /* surface-container-lowest */
-  --gray-100: #f3f3f3; /* surface-container-low */
+  --white: #ffffff;
+  /* surface-container-lowest */
+  --gray-100: #f3f3f3;
+  /* surface-container-low */
   --gray-400: #c4c7c7;
-  --gray-600: #747878; /* outline */
-  --gray-700: #5f5e5e; /* surface-tint */
-  --gray-800: #444748; /* on-surface-variant */
-  --gray-900: #1a1c1c; /* on-surface */
-  --black: #000000; /* primary, tertiary */
+  --gray-600: #747878;
+  /* outline */
+  --gray-700: #5f5e5e;
+  /* surface-tint */
+  --gray-800: #444748;
+  /* on-surface-variant */
+  --gray-900: #1a1c1c;
+  /* on-surface */
+  --black: #000000;
+  /* primary, tertiary */
 
   /* Blue — secondary scale */
-  --blue-50: #fefcff; /* on-secondary-container */
-  --blue-100: #dae2ff; /* secondary-fixed */
-  --blue-200: #b1c5ff; /* secondary-fixed-dim */
+  --blue-50: #fefcff;
+  /* on-secondary-container */
+  --blue-100: #dae2ff;
+  /* secondary-fixed */
+  --blue-200: #b1c5ff;
+  /* secondary-fixed-dim */
   --gray-400: #c4c7c7;
-  --blue-600: #0054cb; /* secondary */
-  --blue-700: #0040a0; /* on-secondary-fixed-variant */
-  --blue-800: #006bfe; /* secondary-container — NOTE: this reads lighter/brighter than --blue-600 despite the naming; double-check against the source if this looks off */
-  --blue-900: #001847; /* on-secondary-fixed */
+  --blue-600: #0054cb;
+  /* secondary */
+  --blue-700: #0040a0;
+  /* on-secondary-fixed-variant */
+  --blue-800: #006bfe;
+  /* secondary-container — NOTE: this reads lighter/brighter than --blue-600 despite the naming; double-check against the source if this looks off */
+  --blue-900: #001847;
+  /* on-secondary-fixed */
 
   /* Purple — tertiary scale */
-  --purple-100: #f3daff; /* tertiary-fixed */
-  --purple-200: #e2b6ff; /* tertiary-fixed-dim */
-  --purple-500: #b650ff; /* on-tertiary-container */
-  --purple-700: #6d00ac; /* on-tertiary-fixed-variant */
-  --purple-900: #2e004d; /* tertiary-container, on-tertiary-fixed */
+  --purple-100: #f3daff;
+  /* tertiary-fixed */
+  --purple-200: #e2b6ff;
+  /* tertiary-fixed-dim */
+  --purple-500: #b650ff;
+  /* on-tertiary-container */
+  --purple-700: #6d00ac;
+  /* on-tertiary-fixed-variant */
+  --purple-900: #2e004d;
+  /* tertiary-container, on-tertiary-fixed */
 
   /* Red — error scale */
-  --red-500: #ba1a1a; /* error */
-  --red-600: #93000a; /* on-error-container */
-  --red-bright: #fc0035; /* error-red — distinct hue (pink-red) from --red-500, kept separate */
+  --red-500: #ba1a1a;
+  /* error */
+  --red-600: #93000a;
+  /* on-error-container */
+  --red-bright: #fc0035;
+  /* error-red — distinct hue (pink-red) from --red-500, kept separate */
 
   /* Status colors (already well-named, unchanged) */
-  --green: #28a948; /* success-green */
-  --amber: #ffae00; /* warning-amber */
+  --green: #28a948;
+  /* success-green */
+  --amber: #ffae00;
+  /* warning-amber */
 
   /* ---------------------------------------------------------------------
      Typography
@@ -233,8 +249,10 @@
      Shapes
      --------------------------------------------------------------------- */
 
-  --shape-card-radius: 12px; /* rounded-md */
-  --shape-button-radius: 6px; /* rounded-sm */
+  --shape-card-radius: 12px;
+  /* rounded-md */
+  --shape-button-radius: 6px;
+  /* rounded-sm */
   --shape-chip-radius: var(--radius-full);
 
   --background: oklch(1 0 0);
@@ -309,9 +327,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }

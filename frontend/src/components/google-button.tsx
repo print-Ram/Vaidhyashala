@@ -1,9 +1,18 @@
 import { Button } from "./ui/button";
+import React from "react";
 
-export default function GoogleButton({ children }: { children: string }) {
+interface GoogleButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  children: string;
+}
+
+export default function GoogleButton({ children, className, ...props }: GoogleButtonProps) {
   return (
-    <Button className="h-auto py-2.5 w-full" variant={"outline"}>
-      <svg viewBox="0 0 24 24">
+    <Button 
+      className={`h-auto py-2.5 w-full transition-all duration-300 hover:shadow active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 ${className || ""}`} 
+      variant={"outline"} 
+      {...props}
+    >
+      <svg className="w-4 h-4" viewBox="0 0 24 24">
         <path
           fill="#4285F4"
           d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1Z"
