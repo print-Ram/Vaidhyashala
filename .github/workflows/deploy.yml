@@ -97,12 +97,10 @@ jobs:
             --region=${{ env.REGION }} \
             --platform=managed \
             --allow-unauthenticated \
-            --add-cloudsql-instances=${{ env.PROJECT_ID }}:${{ env.REGION }}:vaidhyashala-db \
-            --set-env-vars="SPRING_PROFILES_ACTIVE=cloud-run,\
-          DB_NAME=vaidhyashala,\
-          DB_USERNAME=vaidhyashala_user,\
-          CLOUD_SQL_INSTANCE=${{ env.PROJECT_ID }}:${{ env.REGION }}:vaidhyashala-db" \
-            --set-secrets="DB_PASSWORD=vaidhyashala-db-password:latest,\
+            --set-env-vars="SPRING_PROFILES_ACTIVE=cloud-run" \
+            --set-secrets="SPRING_DATASOURCE_URL=vaidhyashala-db-url:latest,\
+          SPRING_DATASOURCE_USERNAME=vaidhyashala-db-username:latest,\
+          SPRING_DATASOURCE_PASSWORD=vaidhyashala-db-password:latest,\
           JWT_SECRET=vaidhyashala-jwt-secret:latest,\
           MAIL_USERNAME=vaidhyashala-mail-username:latest,\
           MAIL_PASSWORD=vaidhyashala-mail-password:latest,\

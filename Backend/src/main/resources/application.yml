@@ -77,17 +77,16 @@ app:
 
 ---
 # =============================================
-# Profile: cloud-run (Cloud SQL PostgreSQL on GCP)
+# Profile: cloud-run (Standard PostgreSQL e.g. Neon, Supabase, Aiven)
 # =============================================
 spring:
   config:
     activate:
       on-profile: cloud-run
   datasource:
-    # Cloud SQL Socket Factory: uses Unix domain socket — no TCP, no public IP needed
-    url: jdbc:postgresql://google/${DB_NAME:vaidhyashala}?cloudSqlInstance=${CLOUD_SQL_INSTANCE}&socketFactory=com.google.cloud.sql.postgres.SocketFactory&ipTypes=PRIVATE,PUBLIC
-    username: ${DB_USERNAME:vaidhyashala_user}
-    password: ${DB_PASSWORD:}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
