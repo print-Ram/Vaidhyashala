@@ -1,5 +1,6 @@
 # =============================================
 # Vaidhyashala Backend - Application Configuration
+# DB: Neon Migration trigger
 # =============================================
 
 spring:
