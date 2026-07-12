@@ -28,9 +28,17 @@ public class BackendApplication {
 	public CommandLineRunner seedDatabase(
 			UserRepository userRepository,
 			PasswordEncoder passwordEncoder,
+			org.springframework.jdbc.core.JdbcTemplate jdbcTemplate,
 			@Value("${app.seed.provider.email}") String email,
 			@Value("${app.seed.provider.password}") String password) {
 		return args -> {
+			try {
+				jdbcTemplate.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
+				System.out.println("SCHEMA UPDATE: Dropped check constraint 'users_role_check' if existed.");
+			} catch (Exception e) {
+				System.err.println("SCHEMA UPDATE ERROR: Failed to drop users_role_check: " + e.getMessage());
+			}
+
 			if (!userRepository.existsByEmail(email)) {
 				User provider = User.builder()
 						.email(email)
