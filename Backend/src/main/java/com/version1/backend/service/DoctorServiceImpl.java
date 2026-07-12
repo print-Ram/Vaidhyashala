@@ -40,6 +40,15 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     @Transactional
     public DoctorProfileDto registerDoctor(DoctorProfileDto dto, String password) {
+        if (dto.getEmail() == null || dto.getEmail().isBlank()) {
+            throw new CustomException("Email is required", HttpStatus.BAD_REQUEST);
+        }
+        if (password == null || password.isBlank()) {
+            throw new CustomException("Password is required", HttpStatus.BAD_REQUEST);
+        }
+        if (dto.getFirstName() == null || dto.getFirstName().isBlank()) {
+            throw new CustomException("First name (Name) is required", HttpStatus.BAD_REQUEST);
+        }
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new CustomException("Email is already in use", HttpStatus.BAD_REQUEST);
         }
@@ -327,6 +336,15 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     @Transactional
     public DoctorProfileDto createDoctor(DoctorProfileDto dto, String password) {
+        if (dto.getEmail() == null || dto.getEmail().isBlank()) {
+            throw new CustomException("Email is required", HttpStatus.BAD_REQUEST);
+        }
+        if (password == null || password.isBlank()) {
+            throw new CustomException("Password is required", HttpStatus.BAD_REQUEST);
+        }
+        if (dto.getFirstName() == null || dto.getFirstName().isBlank()) {
+            throw new CustomException("First name (Name) is required", HttpStatus.BAD_REQUEST);
+        }
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new CustomException("Email is already in use", HttpStatus.BAD_REQUEST);
         }

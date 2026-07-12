@@ -29,6 +29,9 @@ public class AdminController {
     @Autowired
     private DoctorService doctorService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     // -----------------------------------------------------------------------
     // Doctor Management
     // -----------------------------------------------------------------------
@@ -72,8 +75,7 @@ public class AdminController {
      */
     @PostMapping("/doctors")
     public ResponseEntity<DoctorProfileDto> createDoctor(@Valid @RequestBody Map<String, Object> body) {
-        ObjectMapper mapper = new ObjectMapper();
-        DoctorProfileDto dto = mapper.convertValue(body, DoctorProfileDto.class);
+        DoctorProfileDto dto = objectMapper.convertValue(body, DoctorProfileDto.class);
         String password = (String) body.get("password");
         if (password == null || password.isBlank()) {
             password = UUID.randomUUID().toString().substring(0, 8); // Auto-generate if blank
