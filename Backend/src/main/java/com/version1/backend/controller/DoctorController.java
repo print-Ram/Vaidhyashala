@@ -65,24 +65,6 @@ public class DoctorController {
         return ResponseEntity.ok(slotService.getNextAvailability(doctorUserId));
     }
 
-    /**
-     * POST /api/v1/doctors/register
-     * Register a new doctor. Creates User (DOCTOR) + DoctorProfile (PENDING_APPROVAL).
-     * Triggers admin notification email automatically.
-     *
-     * Body: { ...DoctorProfileDto fields..., "password": "..." }
-     */
-    @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> registerDoctor(@Valid @RequestBody Map<String, Object> body) {
-        DoctorProfileDto dto = objectMapper.convertValue(body, DoctorProfileDto.class);
-        String password = (String) body.get("password");
-        DoctorProfileDto created = doctorService.registerDoctor(dto, password);
-        return new ResponseEntity<>(Map.of(
-                "status", 201,
-                "message", "Doctor registered successfully. Awaiting admin approval.",
-                "doctorId", created.getId()
-        ), HttpStatus.CREATED);
-    }
 
     /**
      * GET /api/v1/doctors

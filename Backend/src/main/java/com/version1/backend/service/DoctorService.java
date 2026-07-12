@@ -8,8 +8,6 @@ import java.util.UUID;
 
 public interface DoctorService {
 
-    /** Register a new doctor — creates User (DOCTOR) + DoctorProfile (PENDING_APPROVAL) + sends admin notification. */
-    DoctorProfileDto registerDoctor(DoctorProfileDto dto, String password);
 
     /** Get own doctor profile (DOCTOR role). */
     DoctorProfileDto getMyProfile(UUID userId);

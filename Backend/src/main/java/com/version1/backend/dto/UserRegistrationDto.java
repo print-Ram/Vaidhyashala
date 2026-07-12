@@ -23,6 +23,8 @@ public class UserRegistrationDto {
 
     private String lastName;
 
+    private com.version1.backend.enums.Role role;
+
     private String phoneNumber;
 
     private LocalDate dateOfBirth;

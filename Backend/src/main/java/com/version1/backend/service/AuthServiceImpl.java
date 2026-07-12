@@ -7,10 +7,14 @@ import com.version1.backend.exception.CustomException;
 import com.version1.backend.pojo.*;
 import com.version1.backend.enums.Role;
 import com.version1.backend.enums.UserStatus;
+import com.version1.backend.enums.AdminNotificationType;
+import com.version1.backend.enums.DoctorStatus;
 import com.version1.backend.repository.AddressRepository;
 import com.version1.backend.repository.CustomerProfileRepository;
 import com.version1.backend.repository.UserRepository;
 import com.version1.backend.repository.RefreshTokenRepository;
+import com.version1.backend.repository.DoctorProfileRepository;
+import com.version1.backend.repository.AdminNotificationRepository;
 import com.version1.backend.security.JwtTokenProvider;
 import com.version1.backend.security.UserPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +55,15 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private JwtTokenProvider tokenProvider;
 
+    @Autowired
+    private DoctorProfileRepository doctorProfileRepository;
+
+    @Autowired
+    private AdminNotificationRepository adminNotificationRepository;
+
+    @Autowired
+    private EmailService emailService;
+
     @Value("${app.jwt.refresh-expiration-ms:604800000}")
     private long refreshExpirationMs;
 
@@ -61,44 +74,77 @@ public class AuthServiceImpl implements AuthService {
             throw new CustomException("Email is already in use", HttpStatus.BAD_REQUEST);
         }
 
+        Role targetRole = dto.getRole() != null ? dto.getRole() : Role.CUSTOMER;
+
         // 1. Create and save User
         User user = User.builder()
                 .email(dto.getEmail())
                 .passwordHash(passwordEncoder.encode(dto.getPassword()))
-                .role(Role.CUSTOMER)
+                .role(targetRole)
                 .status(UserStatus.ACTIVE)
                 .build();
         User savedUser = userRepository.save(user);
 
-        // 2. Create and save CustomerProfile
-        CustomerProfile profile = CustomerProfile.builder()
-                .user(savedUser)
-                .firstName(dto.getFirstName())
-                .lastName(dto.getLastName())
-                .phoneNumber(dto.getPhoneNumber())
-                .dateOfBirth(dto.getDateOfBirth())
-                .build();
-        CustomerProfile savedProfile = customerProfileRepository.save(profile);
-
-        // 3. Create and save Address only if at least one address field was provided.
-        //    Customers can add/update their address later via PUT /api/v1/customers/me/address
-        boolean hasAddress = dto.getStreetAddress() != null && !dto.getStreetAddress().isBlank()
-                || dto.getCity() != null && !dto.getCity().isBlank()
-                || dto.getState() != null && !dto.getState().isBlank()
-                || dto.getPostalCode() != null && !dto.getPostalCode().isBlank()
-                || dto.getCountry() != null && !dto.getCountry().isBlank();
-
-        if (hasAddress) {
-            Address address = Address.builder()
-                    .profile(savedProfile)
-                    .streetAddress(dto.getStreetAddress())
-                    .city(dto.getCity())
-                    .state(dto.getState())
-                    .postalCode(dto.getPostalCode())
-                    .country(dto.getCountry())
-                    .isPrimary(true)
+        // 2. Profile Creation based on Role
+        if (targetRole == Role.CUSTOMER) {
+            CustomerProfile profile = CustomerProfile.builder()
+                    .user(savedUser)
+                    .firstName(dto.getFirstName())
+                    .lastName(dto.getLastName())
+                    .phoneNumber(dto.getPhoneNumber())
+                    .dateOfBirth(dto.getDateOfBirth())
                     .build();
-            addressRepository.save(address);
+            CustomerProfile savedProfile = customerProfileRepository.save(profile);
+
+            // Create and save Address only if at least one address field was provided.
+            boolean hasAddress = dto.getStreetAddress() != null && !dto.getStreetAddress().isBlank()
+                    || dto.getCity() != null && !dto.getCity().isBlank()
+                    || dto.getState() != null && !dto.getState().isBlank()
+                    || dto.getPostalCode() != null && !dto.getPostalCode().isBlank()
+                    || dto.getCountry() != null && !dto.getCountry().isBlank();
+
+            if (hasAddress) {
+                Address address = Address.builder()
+                        .profile(savedProfile)
+                        .streetAddress(dto.getStreetAddress())
+                        .city(dto.getCity())
+                        .state(dto.getState())
+                        .postalCode(dto.getPostalCode())
+                        .country(dto.getCountry())
+                        .isPrimary(true)
+                        .build();
+                addressRepository.save(address);
+            }
+        } else if (targetRole == Role.DOCTOR) {
+            DoctorProfile profile = DoctorProfile.builder()
+                    .user(savedUser)
+                    .firstName(dto.getFirstName())
+                    .lastName(dto.getLastName())
+                    .phoneNumber(dto.getPhoneNumber())
+                    .status(DoctorStatus.PENDING_APPROVAL)
+                    .build();
+            DoctorProfile savedProfile = doctorProfileRepository.save(profile);
+
+            // Create admin notification
+            String message = String.format(
+                    "New doctor registered and awaiting approval. Name: %s %s | Email: %s",
+                    savedProfile.getFirstName(), savedProfile.getLastName(),
+                    savedUser.getEmail()
+            );
+            AdminNotification notification = AdminNotification.builder()
+                    .type(AdminNotificationType.DOCTOR_REGISTRATION)
+                    .referenceDoctorId(savedProfile.getId())
+                    .message(message)
+                    .build();
+            adminNotificationRepository.save(notification);
+
+            // Send email notification to ADMIN / PROVIDER
+            emailService.sendAdminDoctorRegistrationNotification(
+                    savedProfile.getFirstName() + " " + savedProfile.getLastName(),
+                    savedUser.getEmail(),
+                    "",
+                    ""
+            );
         }
     }
 
