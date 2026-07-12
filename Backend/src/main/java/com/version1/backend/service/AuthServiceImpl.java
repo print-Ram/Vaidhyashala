@@ -10,8 +10,11 @@ import com.version1.backend.enums.UserStatus;
 import com.version1.backend.repository.AddressRepository;
 import com.version1.backend.repository.CustomerProfileRepository;
 import com.version1.backend.repository.UserRepository;
+import com.version1.backend.repository.RefreshTokenRepository;
 import com.version1.backend.security.JwtTokenProvider;
+import com.version1.backend.security.UserPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -39,10 +43,16 @@ public class AuthServiceImpl implements AuthService {
     private AddressRepository addressRepository;
 
     @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private JwtTokenProvider tokenProvider;
+
+    @Value("${app.jwt.refresh-expiration-ms:604800000}")
+    private long refreshExpirationMs;
 
     @Override
     @Transactional
@@ -70,17 +80,38 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         CustomerProfile savedProfile = customerProfileRepository.save(profile);
 
-        // 3. Create and save Address
-        Address address = Address.builder()
-                .profile(savedProfile)
-                .streetAddress(dto.getStreetAddress())
-                .city(dto.getCity())
-                .state(dto.getState())
-                .postalCode(dto.getPostalCode())
-                .country(dto.getCountry())
-                .isPrimary(true)
+        // 3. Create and save Address only if at least one address field was provided.
+        //    Customers can add/update their address later via PUT /api/v1/customers/me/address
+        boolean hasAddress = dto.getStreetAddress() != null && !dto.getStreetAddress().isBlank()
+                || dto.getCity() != null && !dto.getCity().isBlank()
+                || dto.getState() != null && !dto.getState().isBlank()
+                || dto.getPostalCode() != null && !dto.getPostalCode().isBlank()
+                || dto.getCountry() != null && !dto.getCountry().isBlank();
+
+        if (hasAddress) {
+            Address address = Address.builder()
+                    .profile(savedProfile)
+                    .streetAddress(dto.getStreetAddress())
+                    .city(dto.getCity())
+                    .state(dto.getState())
+                    .postalCode(dto.getPostalCode())
+                    .country(dto.getCountry())
+                    .isPrimary(true)
+                    .build();
+            addressRepository.save(address);
+        }
+    }
+
+    private String createAndSaveRefreshToken(User user) {
+        String tokenString = UUID.randomUUID().toString();
+        RefreshToken refreshToken = RefreshToken.builder()
+                .token(tokenString)
+                .user(user)
+                .expiryDate(LocalDateTime.now().plus(refreshExpirationMs, java.time.temporal.ChronoUnit.MILLIS))
+                .revoked(false)
                 .build();
-        addressRepository.save(address);
+        refreshTokenRepository.save(refreshToken);
+        return tokenString;
     }
 
     @Override
@@ -93,7 +124,12 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwt = tokenProvider.generateToken(authentication);
-        String refreshToken = UUID.randomUUID().toString();
+
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
+
+        String refreshToken = createAndSaveRefreshToken(user);
 
         return TokenResponseDto.builder()
                 .accessToken(jwt)
@@ -104,17 +140,73 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public TokenResponseDto loginWithGoogle(String email) {
+    public TokenResponseDto loginWithGoogle(String email, String name) {
+        User user;
         if (!userRepository.existsByEmail(email)) {
-            throw new CustomException("User not registered", HttpStatus.NOT_FOUND);
+            user = User.builder()
+                    .email(email)
+                    .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString()))
+                    .role(Role.CUSTOMER)
+                    .status(UserStatus.ACTIVE)
+                    .build();
+            user = userRepository.save(user);
+
+            CustomerProfile profile = CustomerProfile.builder()
+                    .user(user)
+                    .firstName(name != null && !name.isBlank() ? name : "Google User")
+                    .build();
+            customerProfileRepository.save(profile);
+        } else {
+            user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
+
+            CustomerProfile profile = customerProfileRepository.findByUserId(user.getId())
+                    .orElse(null);
+            if (profile == null) {
+                profile = CustomerProfile.builder()
+                        .user(user)
+                        .firstName(name != null && !name.isBlank() ? name : "Google User")
+                        .build();
+                customerProfileRepository.save(profile);
+            } else if (name != null && !name.isBlank()) {
+                profile.setFirstName(name);
+                customerProfileRepository.save(profile);
+            }
         }
 
         String jwt = tokenProvider.generateTokenFromEmail(email);
-        String refreshToken = UUID.randomUUID().toString();
+        String refreshToken = createAndSaveRefreshToken(user);
 
         return TokenResponseDto.builder()
                 .accessToken(jwt)
                 .refreshToken(refreshToken)
+                .expiresIn(900)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public TokenResponseDto refreshAccessToken(String refreshTokenString) {
+        RefreshToken oldRefreshToken = refreshTokenRepository.findByToken(refreshTokenString)
+                .orElseThrow(() -> new CustomException("Invalid refresh token", HttpStatus.UNAUTHORIZED));
+
+        if (oldRefreshToken.isRevoked()) {
+            throw new CustomException("Refresh token has been revoked", HttpStatus.UNAUTHORIZED);
+        }
+
+        if (oldRefreshToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            oldRefreshToken.setRevoked(true);
+            refreshTokenRepository.save(oldRefreshToken);
+            throw new CustomException("Refresh token has expired", HttpStatus.UNAUTHORIZED);
+        }
+
+        User user = oldRefreshToken.getUser();
+
+        String newJwt = tokenProvider.generateTokenFromEmail(user.getEmail());
+
+        return TokenResponseDto.builder()
+                .accessToken(newJwt)
+                .refreshToken(refreshTokenString)
                 .expiresIn(900)
                 .build();
     }

@@ -9,4 +9,6 @@ public class GoogleLoginRequestDto {
     @NotBlank
     @Email
     private String email;
+
+    private String name;
 }

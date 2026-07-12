@@ -114,4 +114,75 @@ public class EmailServiceImpl implements EmailService {
             log.error("Failed to send email to {}", to, e);
         }
     }
+
+    // -----------------------------------------------------------------------
+    // Admin (PROVIDER) Notification Emails
+    // -----------------------------------------------------------------------
+
+    /**
+     * Notifies the clinic admin when a new doctor registers and is awaiting approval.
+     * The admin email is configured via application.yml (app.admin.email).
+     */
+    @Override
+    @Async
+    public void sendAdminDoctorRegistrationNotification(String doctorName, String doctorEmail,
+                                                         String specialization, String department) {
+        String adminEmail = getAdminEmail();
+        String subject = "⚕️ New Doctor Registration Pending Approval — Vaidhyashala";
+
+        String content = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>"
+                + "<div style='background: linear-gradient(135deg, #0f4c81, #1a73e8); padding: 24px; border-radius: 12px 12px 0 0;'>"
+                + "<h1 style='color: white; margin: 0; font-size: 22px;'>👨‍⚕️ New Doctor Registration</h1>"
+                + "<p style='color: rgba(255,255,255,0.85); margin: 6px 0 0;'>Action required: Approval pending</p>"
+                + "</div>"
+                + "<div style='background: #f9f9f9; padding: 28px; border-radius: 0 0 12px 12px; border: 1px solid #e0e0e0;'>"
+                + "<p style='font-size: 16px; color: #333;'>A new doctor has registered on Vaidhyashala and requires your approval.</p>"
+                + "<div style='background: white; border-left: 4px solid #1a73e8; padding: 16px 20px; border-radius: 6px; margin: 16px 0;'>"
+                + "<p style='margin: 0; font-size: 15px;'><strong>Name:</strong> " + doctorName + "</p>"
+                + "<p style='margin: 8px 0 0;'><strong>Email:</strong> " + doctorEmail + "</p>"
+                + "<p style='margin: 8px 0 0;'><strong>Specialization:</strong> " + (specialization != null ? specialization : "Not specified") + "</p>"
+                + "<p style='margin: 8px 0 0;'><strong>Department:</strong> " + (department != null ? department : "Not specified") + "</p>"
+                + "</div>"
+                + "<p style='color: #555;'>Please log in to the admin portal to review the doctor's credentials and approve or reject this registration.</p>"
+                + "<p style='color: #888; font-size: 12px; margin-top: 20px;'>This is an automated notification from Vaidhyashala.</p>"
+                + "</div></div>";
+
+        sendHtmlMail(adminEmail, subject, content);
+    }
+
+    /**
+     * Notifies the clinic admin when a doctor opts out of the scheme.
+     */
+    @Override
+    @Async
+    public void sendAdminDoctorOptOutNotification(String doctorName, String doctorEmail, String reason) {
+        String adminEmail = getAdminEmail();
+        String subject = "⚠️ Doctor Opt-Out Notification — Vaidhyashala";
+
+        String content = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>"
+                + "<div style='background: linear-gradient(135deg, #b71c1c, #e53935); padding: 24px; border-radius: 12px 12px 0 0;'>"
+                + "<h1 style='color: white; margin: 0; font-size: 22px;'>⚠️ Doctor Opted Out</h1>"
+                + "<p style='color: rgba(255,255,255,0.85); margin: 6px 0 0;'>A doctor has left the Vaidhyashala scheme</p>"
+                + "</div>"
+                + "<div style='background: #f9f9f9; padding: 28px; border-radius: 0 0 12px 12px; border: 1px solid #e0e0e0;'>"
+                + "<div style='background: white; border-left: 4px solid #e53935; padding: 16px 20px; border-radius: 6px; margin: 16px 0;'>"
+                + "<p style='margin: 0; font-size: 15px;'><strong>Doctor:</strong> " + doctorName + "</p>"
+                + "<p style='margin: 8px 0 0;'><strong>Email:</strong> " + doctorEmail + "</p>"
+                + "<p style='margin: 8px 0 0;'><strong>Reason:</strong> " + reason + "</p>"
+                + "</div>"
+                + "<p style='color: #555;'>Please review this opt-out and reassign any pending appointments if necessary.</p>"
+                + "</div></div>";
+
+        sendHtmlMail(adminEmail, subject, content);
+    }
+
+    /**
+     * Retrieves the admin email from system properties or a default.
+     * In production this should be injected via @Value("${app.admin.email}").
+     */
+    private String getAdminEmail() {
+        String email = System.getenv("ADMIN_EMAIL");
+        return (email != null && !email.isBlank()) ? email : "admin@vaidhyashala.com";
+    }
 }
+

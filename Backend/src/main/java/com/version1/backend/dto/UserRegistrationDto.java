@@ -21,25 +21,19 @@ public class UserRegistrationDto {
     @NotBlank
     private String firstName;
 
-    @NotBlank
     private String lastName;
 
     private String phoneNumber;
 
     private LocalDate dateOfBirth;
 
-    @NotBlank
+    // -------------------------------------------------------------------
+    // Address fields are OPTIONAL at sign-up.
+    // Customers can fill them in later via PUT /api/v1/customers/me/address
+    // -------------------------------------------------------------------
     private String streetAddress;
-
-    @NotBlank
     private String city;
-
-    @NotBlank
     private String state;
-
-    @NotBlank
     private String postalCode;
-
-    @NotBlank
     private String country;
 }

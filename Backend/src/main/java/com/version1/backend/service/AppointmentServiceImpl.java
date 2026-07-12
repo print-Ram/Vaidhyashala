@@ -54,8 +54,9 @@ public class AppointmentServiceImpl implements AppointmentService {
         User provider = userRepository.findById(dto.getProviderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Provider not found with ID: " + dto.getProviderId()));
 
-        if (provider.getRole() != Role.PROVIDER) {
-            throw new CustomException("Selected user is not a provider", HttpStatus.BAD_REQUEST);
+        // Accept both DOCTOR (individual doctors) and PROVIDER (admin/owner acting as doctor)
+        if (provider.getRole() != Role.DOCTOR && provider.getRole() != Role.PROVIDER) {
+            throw new CustomException("Selected user is not a doctor or provider", HttpStatus.BAD_REQUEST);
         }
 
         // 1. Check for overlapping appointments
@@ -70,7 +71,21 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new CustomException("This slot is already booked for the provider", HttpStatus.CONFLICT);
         }
 
-        // 2. Create the internal appointment record
+        // 2. First-appointment 50% discount logic
+        //    Count all prior CONFIRMED appointments between this doctor and this customer.
+        long priorAppointmentCount = appointmentRepository.countByDoctorUserIdAndCustomerIdAndStatus(
+                provider.getId(),
+                customer.getId(),
+                AppointmentStatus.CONFIRMED
+        );
+        boolean isFirstAppointment = (priorAppointmentCount == 0);
+
+        // Capture consultation fee from the DTO (populated by the frontend from SlotDto)
+        // Apply 50% discount if first appointment; otherwise use any day-offer from DTO
+        java.math.BigDecimal consultationFee = dto.getConsultationFee();
+        int discountPercent = isFirstAppointment ? 50 : dto.getOfferPercent();
+
+        // 3. Create the internal appointment record
         Appointment appointment = Appointment.builder()
                 .customer(customer)
                 .provider(provider)
@@ -78,6 +93,9 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .endTime(dto.getEndTime())
                 .status(AppointmentStatus.PENDING)
                 .description(dto.getDescription())
+                .consultationFee(consultationFee)
+                .discountPercent(discountPercent)
+                .isFirstAppointment(isFirstAppointment)
                 .build();
 
         Appointment savedAppointment = appointmentRepository.save(appointment);

@@ -29,11 +29,30 @@ spring:
           starttls:
             enable: true
 
+  # ---- Security OAuth2 Client Configuration ----
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            #redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - email
+              - profile
+
+  # ---- Spring AI Configuration ----
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:dummy-key-for-local-dev-and-tests}
+
 # ---- Application Custom Properties ----
 app:
   jwt:
     secret: ${JWT_SECRET:dGhpc2lzYXZlcnlzZWN1cmVhbmRsYXJnZWJhc2U2NHNpZ25pbmdrZXlmb3J2YWlkaHlhc2hhbGFkZXZlbG9wbWVudA==}
-    expiration-ms: 900000        # 15 minutes
+    expiration-ms: 60000        # 1 hour
+    refresh-expiration-ms: 604800000  # 7 days
   google:
     credentials:
       json: ${GOOGLE_CREDENTIALS_JSON:}

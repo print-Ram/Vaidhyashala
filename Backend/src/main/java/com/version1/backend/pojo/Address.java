@@ -25,19 +25,19 @@ public class Address {
     @JoinColumn(name = "profile_id", nullable = false)
     private CustomerProfile profile;
 
-    @Column(name = "street_address", nullable = false)
+    @Column(name = "street_address")
     private String streetAddress;
 
-    @Column(nullable = false)
+    @Column
     private String city;
 
-    @Column(nullable = false)
+    @Column
     private String state;
 
-    @Column(name = "postal_code", nullable = false)
+    @Column(name = "postal_code")
     private String postalCode;
 
-    @Column(nullable = false)
+    @Column
     private String country;
 
     @Column(name = "is_primary", nullable = false)

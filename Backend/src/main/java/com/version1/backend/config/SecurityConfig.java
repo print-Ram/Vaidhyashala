@@ -69,7 +69,18 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Public auth endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        // Public doctor registration endpoint
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/doctors/register")
+                        .permitAll()
+                        // Public slot browsing (BookMyShow-style — no login required)
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/doctors/*/slots").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/doctors/*/next-availability").permitAll()
+                        // Public doctor profiles access
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/doctors").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/doctors/{id}").permitAll()
+                        // Everything else requires authentication (fine-grained RBAC via @PreAuthorize)
                         .anyRequest().authenticated());
 
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

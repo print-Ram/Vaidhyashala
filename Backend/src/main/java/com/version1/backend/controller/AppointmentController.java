@@ -39,13 +39,20 @@ public class AppointmentController {
      * CUSTOMER: Returns only their own appointments (meet link visible, no other customer's data).
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'PROVIDER')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'PROVIDER', 'DOCTOR')")
     public ResponseEntity<List<AppointmentResponseDto>> getAppointments(@AuthenticationPrincipal UserPrincipal userPrincipal) {
         boolean isProvider = userPrincipal.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_PROVIDER"));
-        List<Appointment> appointments = isProvider
-                ? appointmentService.getAllAppointments()
-                : appointmentService.getAppointmentsByCustomerUserId(userPrincipal.getId());
+        boolean isDoctor = userPrincipal.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_DOCTOR"));
+        List<Appointment> appointments;
+        if (isProvider) {
+            appointments = appointmentService.getAllAppointments();
+        } else if (isDoctor) {
+            appointments = appointmentService.getAppointmentsByProviderId(userPrincipal.getId());
+        } else {
+            appointments = appointmentService.getAppointmentsByCustomerUserId(userPrincipal.getId());
+        }
 
         return ResponseEntity.ok(appointments.stream()
                 .map(a -> toDto(a, isProvider))
@@ -58,16 +65,16 @@ public class AppointmentController {
      * CUSTOMER: Returns their own appointments (with meet link).
      */
     @GetMapping("/me")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'PROVIDER')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'PROVIDER', 'DOCTOR')")
     public ResponseEntity<List<AppointmentResponseDto>> getMyAppointments(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        boolean isProvider = userPrincipal.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_PROVIDER"));
-        List<Appointment> appointments = isProvider
+        boolean isProviderOrDoctor = userPrincipal.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_PROVIDER") || a.getAuthority().equals("ROLE_DOCTOR"));
+        List<Appointment> appointments = isProviderOrDoctor
                 ? appointmentService.getAppointmentsByProviderId(userPrincipal.getId())
                 : appointmentService.getAppointmentsByCustomerUserId(userPrincipal.getId());
 
         return ResponseEntity.ok(appointments.stream()
-                .map(a -> toDto(a, isProvider))
+                .map(a -> toDto(a, isProviderOrDoctor))
                 .collect(Collectors.toList()));
     }
 
