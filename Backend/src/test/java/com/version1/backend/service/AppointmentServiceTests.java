@@ -10,7 +10,9 @@ import com.version1.backend.enums.UserStatus;
 import com.version1.backend.repository.AddressRepository;
 import com.version1.backend.repository.AppointmentRepository;
 import com.version1.backend.repository.CustomerProfileRepository;
+import com.version1.backend.repository.DoctorProfileRepository;
 import com.version1.backend.repository.EmailNotificationRepository;
+import com.version1.backend.repository.PaymentRepository;
 import com.version1.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +35,9 @@ public class AppointmentServiceTests {
     private AppointmentService appointmentService;
 
     @Autowired
+    private PaymentService paymentService;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -42,10 +47,16 @@ public class AppointmentServiceTests {
     private AppointmentRepository appointmentRepository;
 
     @Autowired
+    private EmailNotificationRepository emailNotificationRepository;
+
+    @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Autowired
     private AddressRepository addressRepository;
 
     @Autowired
-    private EmailNotificationRepository emailNotificationRepository;
+    private DoctorProfileRepository doctorProfileRepository;
 
     @MockitoBean
     private GoogleCalendarService googleCalendarService;
@@ -60,9 +71,11 @@ public class AppointmentServiceTests {
     @BeforeEach
     void setUp() {
         emailNotificationRepository.deleteAll();
+        paymentRepository.deleteAll();
         appointmentRepository.deleteAll();
         addressRepository.deleteAll();
         customerProfileRepository.deleteAll();
+        doctorProfileRepository.deleteAll();
         userRepository.deleteAll();
 
         // 1. Create provider user
@@ -93,7 +106,7 @@ public class AppointmentServiceTests {
     }
 
     @Test
-    void testCreateAppointmentSuccess() {
+    void testCreateAppointmentSuccess() throws Exception {
         Mockito.when(googleCalendarService.createEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.anyString()))
                 .thenReturn(new CalendarEventResult("gcal-event-123", null));
 
@@ -106,24 +119,42 @@ public class AppointmentServiceTests {
         Appointment appointment = appointmentService.createAppointment(customerUser.getId(), dto);
 
         assertNotNull(appointment);
-        assertEquals(AppointmentStatus.CONFIRMED, appointment.getStatus());
-        assertEquals("gcal-event-123", appointment.getGoogleCalendarEventId());
+        assertEquals(AppointmentStatus.PENDING, appointment.getStatus());
+
+        // 1. Checkout
+        Payment payment = paymentService.checkout(new com.version1.backend.dto.PaymentCheckoutDto(appointment.getId()));
+        assertNotNull(payment);
+        assertEquals(com.version1.backend.enums.PaymentStatus.PENDING, payment.getStatus());
+
+        // 2. Verify payment
+        Payment verifiedPayment = paymentService.verifyPayment(new com.version1.backend.dto.PaymentVerificationDto(payment.getId(), "tx-123"));
+        assertEquals(com.version1.backend.enums.PaymentStatus.COMPLETED, verifiedPayment.getStatus());
+        assertEquals("tx-123", verifiedPayment.getTransactionId());
+
+        // 3. Reload appointment and verify it is CONFIRMED and has Google Calendar details
+        Appointment updatedAppointment = appointmentRepository.findById(appointment.getId()).orElseThrow();
+        assertEquals(AppointmentStatus.CONFIRMED, updatedAppointment.getStatus());
+        assertEquals("gcal-event-123", updatedAppointment.getGoogleCalendarEventId());
     }
 
     @Test
-    void testCreateAppointmentOverlapConflict() {
+    void testCreateAppointmentOverlapConflict() throws Exception {
         Mockito.when(googleCalendarService.createEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.anyString()))
                 .thenReturn(new CalendarEventResult("gcal-event-123", null));
 
         LocalDateTime time = LocalDateTime.now().plusDays(2);
 
-        AppointmentCreateDto firstAppointment = new AppointmentCreateDto();
-        firstAppointment.setProviderId(provider.getId());
-        firstAppointment.setStartTime(time);
-        firstAppointment.setEndTime(time.plusMinutes(45));
-        firstAppointment.setDescription("First consultation");
+        AppointmentCreateDto firstAppointmentDto = new AppointmentCreateDto();
+        firstAppointmentDto.setProviderId(provider.getId());
+        firstAppointmentDto.setStartTime(time);
+        firstAppointmentDto.setEndTime(time.plusMinutes(45));
+        firstAppointmentDto.setDescription("First consultation");
 
-        appointmentService.createAppointment(customerUser.getId(), firstAppointment);
+        Appointment firstAppointment = appointmentService.createAppointment(customerUser.getId(), firstAppointmentDto);
+
+        // Confirm first appointment via payment to block the slot
+        Payment payment = paymentService.checkout(new com.version1.backend.dto.PaymentCheckoutDto(firstAppointment.getId()));
+        paymentService.verifyPayment(new com.version1.backend.dto.PaymentVerificationDto(payment.getId(), "tx-123"));
 
         // Try to schedule another appointment during the same slot
         AppointmentCreateDto secondAppointment = new AppointmentCreateDto();

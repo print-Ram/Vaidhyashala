@@ -5,7 +5,7 @@ import com.version1.backend.dto.*;
 import com.version1.backend.pojo.DoctorProfile;
 import com.version1.backend.repository.DoctorProfileRepository;
 import com.version1.backend.security.UserPrincipal;
-import com.version1.backend.service.AiService;
+import com.version1.backend.exception.ResourceNotFoundException;
 import com.version1.backend.service.DoctorService;
 import com.version1.backend.service.SlotService;
 import jakarta.validation.Valid;
@@ -35,7 +35,6 @@ public class DoctorController {
 
     @Autowired private DoctorService doctorService;
     @Autowired private SlotService slotService;
-    @Autowired private AiService aiService;
     @Autowired private DoctorProfileRepository doctorProfileRepository;
     @Autowired private ObjectMapper objectMapper;
 
@@ -151,7 +150,7 @@ public class DoctorController {
 
     /**
      * POST /api/v1/doctors/me/resume  (multipart/form-data, file=resume)
-     * Parses the resume via Spring AI → autofills DoctorProfile fields → saves.
+     * Saves the resume URL / path to the doctor's profile.
      * Returns the updated DoctorProfileDto.
      */
     @PostMapping(value = "/me/resume", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -160,47 +159,25 @@ public class DoctorController {
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam("file") MultipartFile file) throws Exception {
 
-        // 1. Parse resume via AI
-        DoctorResumeParseResult parsed = aiService.parseResume(file);
-
-        // 2. Build an update DTO from parsed result
-        DoctorProfileDto updateDto = DoctorProfileDto.builder()
-                .firstName(parsed.getFirstName())
-                .lastName(parsed.getLastName())
-                .phoneNumber(parsed.getPhoneNumber())
-                .specialization(parsed.getSpecialization())
-                .department(parsed.getDepartment())
-                .expertIn(parsed.getExpertIn())
-                .educationDetails(parsed.getEducation())
-                .certifications(parsed.getCertifications())
-                .about(parsed.getGeneratedBio())
-                .build();
-
-        // 3. Save to profile
-        DoctorProfileDto updated = doctorService.updateMyProfile(principal.getId(), updateDto);
-
-        // 4. Also save the resume URL (filename or path — file storage TBD)
-        // For now we store the original filename as a placeholder
         DoctorProfile profile = doctorProfileRepository.findByUserId(principal.getId())
-                .orElseThrow();
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor profile not found"));
         profile.setResumeUrl("uploads/resumes/" + file.getOriginalFilename());
         doctorProfileRepository.save(profile);
 
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(doctorService.getMyProfile(principal.getId()));
     }
 
     /**
-     * POST /api/v1/doctors/me/regenerate-bio
-     * Re-runs AI bio generation from the doctor's current profile fields.
-     * Returns the new bio text — NOT saved automatically.
-     * Doctor can then call PUT /me/profile with the accepted bio.
+     * PUT /api/v1/doctors/me/configure
+     * Unified dashboard settings and slots update API.
+     * Consumes multipart/form-data.
      */
-    @PostMapping("/me/regenerate-bio")
+    @PutMapping(value = "/me/configure", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('DOCTOR')")
-    public ResponseEntity<Map<String, String>> regenerateBio(@AuthenticationPrincipal UserPrincipal principal) {
-        DoctorProfile profile = doctorProfileRepository.findByUserId(principal.getId())
-                .orElseThrow(() -> new RuntimeException("Doctor profile not found"));
-        String newBio = aiService.generateBio(profile);
-        return ResponseEntity.ok(Map.of("generatedBio", newBio));
+    public ResponseEntity<DoctorProfileDto> configureDashboard(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestPart("settings") DoctorConfigurationRequestDto settings,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) throws Exception {
+        return ResponseEntity.ok(doctorService.configureMyDashboard(principal.getId(), settings, profileImage));
     }
 }

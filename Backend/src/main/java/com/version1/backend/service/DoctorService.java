@@ -55,4 +55,7 @@ public interface DoctorService {
     // Public/Guest operations
     List<DoctorProfileDto> getActiveDoctors();
     DoctorProfileDto getActiveDoctorById(UUID doctorId);
+
+    /** Unified doctor settings and availability configuration dashboard API. */
+    DoctorProfileDto configureMyDashboard(UUID userId, DoctorConfigurationRequestDto config, org.springframework.web.multipart.MultipartFile profileImageFile) throws Exception;
 }

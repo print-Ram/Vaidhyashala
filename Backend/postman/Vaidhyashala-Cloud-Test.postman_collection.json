@@ -1,0 +1,295 @@
+{
+  "info": {
+    "name": "Vaidhyashala Cloud API - Test Payment Flow",
+    "description": "Run these requests in order against a deployed cloud-run profile. Set baseUrl to the deployed API URL without a trailing slash. The current backend supports PAYMENT_GATEWAY=test only; verification creates no real charge, but it does confirm the appointment and can trigger configured Calendar/email integrations.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://YOUR_CLOUD_RUN_URL/api/v1"
+    },
+    {
+      "key": "testPassword",
+      "value": "DummyPass123!"
+    },
+    {
+      "key": "providerId",
+      "value": ""
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Register dummy customer",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set('testEmail', `cloud.customer.${Date.now()}@example.test`);"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Customer registration succeeds', () => pm.response.to.have.status(201));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Cloud\",\n  \"lastName\": \"Test\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"role\": \"CUSTOMER\",\n  \"phoneNumber\": \"9876543210\"\n}"
+        },
+        "url": "{{baseUrl}}/auth/register"
+      }
+    },
+    {
+      "name": "2. Login customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Login succeeds', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('accessToken', body.accessToken);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "3. Get customer profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Profile is returned', () => pm.response.to.have.status(200));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/customers/me/profile"
+      }
+    },
+    {
+      "name": "4. Get seeded providers",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('At least one provider is available', () => pm.expect(pm.response.json().length).to.be.above(0));",
+              "const provider = pm.response.json()[0];",
+              "pm.collectionVariables.set('providerId', provider.id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/appointments/providers"
+      }
+    },
+    {
+      "name": "5. Create appointment",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const start = new Date();",
+              "start.setDate(start.getDate() + 7);",
+              "start.setHours(11, 0, 0, 0);",
+              "const end = new Date(start.getTime() + 30 * 60 * 1000);",
+              "pm.collectionVariables.set('appointmentStart', start.toISOString().slice(0, 19));",
+              "pm.collectionVariables.set('appointmentEnd', end.toISOString().slice(0, 19));"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Appointment is pending', () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set('appointmentId', pm.response.json().id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"providerId\": \"{{providerId}}\",\n  \"startTime\": \"{{appointmentStart}}\",\n  \"endTime\": \"{{appointmentEnd}}\",\n  \"description\": \"Cloud test appointment\",\n  \"consultationFee\": 500.00,\n  \"offerPercent\": 0\n}"
+        },
+        "url": "{{baseUrl}}/appointments"
+      }
+    },
+    {
+      "name": "6. Create test payment order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Test payment is pending', () => pm.response.to.have.status(201));",
+              "const payment = pm.response.json();",
+              "pm.test('Test gateway order is returned', () => pm.expect(payment.gatewayOrderId).to.match(/^test_order_/));",
+              "pm.collectionVariables.set('paymentId', payment.id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"appointmentId\": \"{{appointmentId}}\"\n}"
+        },
+        "url": "{{baseUrl}}/payments/checkout"
+      }
+    },
+    {
+      "name": "7. Verify test payment",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set('testTransactionId', `test_tx_${Date.now()}`);"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Payment is completed', () => pm.response.to.have.status(200));",
+              "pm.test('Payment status is COMPLETED', () => pm.expect(pm.response.json().status).to.eql('COMPLETED'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"paymentId\": \"{{paymentId}}\",\n  \"transactionId\": \"{{testTransactionId}}\"\n}"
+        },
+        "url": "{{baseUrl}}/payments/verify"
+      }
+    },
+    {
+      "name": "8. Confirm appointment is visible",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Confirmed appointment is returned', () => {",
+              "  const appointment = pm.response.json().find(item => item.id === pm.collectionVariables.get('appointmentId'));",
+              "  pm.expect(appointment.status).to.eql('CONFIRMED');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/appointments/me"
+      }
+    }
+  ]
+}

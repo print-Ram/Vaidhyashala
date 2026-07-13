@@ -56,5 +56,5 @@ public class DoctorAvailabilityDto {
     /** Offer label text, e.g. "Festival Discount". */
     private String offerLabel;
 
-    private boolean isActive;
+    private Boolean isActive;
 }

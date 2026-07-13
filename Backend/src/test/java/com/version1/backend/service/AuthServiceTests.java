@@ -15,7 +15,9 @@ import org.springframework.test.context.ActiveProfiles;
 import com.version1.backend.repository.AddressRepository;
 import com.version1.backend.repository.AppointmentRepository;
 import com.version1.backend.repository.CustomerProfileRepository;
+import com.version1.backend.repository.DoctorProfileRepository;
 import com.version1.backend.repository.EmailNotificationRepository;
+import com.version1.backend.repository.PaymentRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -42,6 +44,12 @@ public class AuthServiceTests {
     private EmailNotificationRepository emailNotificationRepository;
 
     @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Autowired
+    private DoctorProfileRepository doctorProfileRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @MockitoBean
@@ -53,9 +61,11 @@ public class AuthServiceTests {
     @BeforeEach
     void setUp() {
         emailNotificationRepository.deleteAll();
+        paymentRepository.deleteAll();
         appointmentRepository.deleteAll();
         addressRepository.deleteAll();
         customerProfileRepository.deleteAll();
+        doctorProfileRepository.deleteAll();
         userRepository.deleteAll();
     }
 

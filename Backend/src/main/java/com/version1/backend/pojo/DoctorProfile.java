@@ -90,6 +90,15 @@ public class DoctorProfile {
     @Column(name = "resume_url")
     private String resumeUrl;
 
+    @Column(name = "designation")
+    private String designation;
+
+    @Column(name = "reg_no")
+    private String regNo;
+
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default

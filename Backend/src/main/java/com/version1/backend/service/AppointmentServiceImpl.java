@@ -100,40 +100,6 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Appointment savedAppointment = appointmentRepository.save(appointment);
 
-        // 3. Integrate with Google Calendar API (using Service Account to modify organization calendar)
-        String meetLink = null;
-        try {
-            CalendarEventResult calResult = googleCalendarService.createEvent(
-                    customer.getUser().getEmail(),
-                    dto.getStartTime(),
-                    dto.getEndTime(),
-                    dto.getDescription()
-            );
-            savedAppointment.setGoogleCalendarEventId(calResult.getEventId());
-            savedAppointment.setMeetLink(calResult.getMeetLink());
-            meetLink = calResult.getMeetLink();
-            savedAppointment.setStatus(AppointmentStatus.CONFIRMED);
-            savedAppointment = appointmentRepository.save(savedAppointment);
-        } catch (Exception e) {
-            throw new CustomException("Failed to schedule Google Calendar event: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        // 4. Trigger Asynchronous Confirmation Email
-        String customerEmail = customer.getUser().getEmail();
-        String customerName = customer.getFirstName() + " " + customer.getLastName();
-        emailService.sendAppointmentConfirmationEmail(customerEmail, customerName, dto.getStartTime(), meetLink);
-
-        // 5. Schedule 24-Hour Reminder notification entry in database
-        LocalDateTime reminderTime = dto.getStartTime().minusHours(24);
-        EmailNotification reminder = EmailNotification.builder()
-                .appointment(savedAppointment)
-                .type(NotificationType.REMINDER)
-                .recipientEmail(customerEmail)
-                .status(NotificationStatus.PENDING)
-                .scheduledSendTime(reminderTime)
-                .build();
-        emailNotificationRepository.save(reminder);
-
         return savedAppointment;
     }
 

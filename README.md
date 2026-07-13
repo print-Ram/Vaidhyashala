@@ -47,7 +47,7 @@
 | **Email** | Spring Mail (Gmail SMTP) |
 | **Calendar** | Google Calendar API v3 (Service Account) |
 | **Video Calls** | Google Meet (auto-generated via Calendar API) |
-| **AI** | Spring AI + Google Gemini (Generative AI) |
+| **Payments** | Custom Billing, Checkout & Verification Pipeline |
 | **Secrets** | Google Cloud Secret Manager |
 | **Build Tool** | Apache Maven |
 | **API Docs** | SpringDoc OpenAPI (Swagger UI) |
@@ -112,30 +112,41 @@ Vaidhyashala/
 │   │   ├── controller/
 │   │   │   ├── AuthController.java          # /api/v1/auth (register, login)
 │   │   │   ├── CustomerController.java      # /api/v1/customers (profile CRUD)
-│   │   │   └── AppointmentController.java   # /api/v1/appointments (book, list)
+│   │   │   ├── DoctorController.java        # /api/v1/doctors (profile settings, upload pics, sync slots)
+│   │   │   ├── AppointmentController.java   # /api/v1/appointments (book, list)
+│   │   │   └── PaymentController.java       # /api/v1/payments (checkout, verify)
 │   │   ├── dto/
 │   │   │   ├── UserRegistrationDto.java     # Register request body
 │   │   │   ├── LoginRequestDto.java         # Login request body
 │   │   │   ├── TokenResponseDto.java        # Login response (JWT token)
 │   │   │   ├── CustomerProfileDto.java      # Customer profile view/update
+│   │   │   ├── DoctorProfileDto.java        # Doctor profile view/update
+│   │   │   ├── DoctorConfigurationRequestDto.java # Combined settings payload
 │   │   │   ├── AppointmentCreateDto.java    # Book appointment request body
 │   │   │   ├── AppointmentResponseDto.java  # Appointment API response (role-filtered)
+│   │   │   ├── PaymentCheckoutDto.java      # Initiate payment session
+│   │   │   ├── PaymentVerificationDto.java  # Confirm transaction completion
 │   │   │   └── CalendarEventResult.java     # Internal DTO: eventId + meetLink
 │   │   ├── pojo/ (JPA Entities)
 │   │   │   ├── User.java                    # Auth user (email, password, role)
 │   │   │   ├── CustomerProfile.java         # Extended customer data (name, DOB, etc)
+│   │   │   ├── DoctorProfile.java           # Extended doctor data (name, designation, regNo)
 │   │   │   ├── Address.java                 # Customer address details
 │   │   │   ├── Appointment.java             # Booking record (times, status, meetLink)
+│   │   │   ├── Payment.java                 # Billing record (amount, status, gateway transaction ID)
 │   │   │   ├── EmailNotification.java       # Scheduled notification record
-│   │   │   ├── Role.java                    # Enum: CUSTOMER, PROVIDER
-│   │   │   ├── AppointmentStatus.java       # Enum: PENDING, CONFIRMED, CANCELLED
+│   │   │   ├── Role.java                    # Enum: CUSTOMER, PROVIDER, DOCTOR
+│   │   │   ├── AppointmentStatus.java       # Enum: PENDING, CONFIRMED, CANCELLED, COMPLETED
+│   │   │   ├── PaymentStatus.java           # Enum: PENDING, COMPLETED, FAILED, REFUNDED
 │   │   │   ├── NotificationType.java        # Enum: REMINDER, CONFIRMATION
 │   │   │   ├── NotificationStatus.java      # Enum: PENDING, SENT, FAILED
 │   │   │   └── UserStatus.java              # Enum: ACTIVE, INACTIVE
 │   │   ├── repository/
 │   │   │   ├── UserRepository.java
 │   │   │   ├── CustomerProfileRepository.java
+│   │   │   ├── DoctorProfileRepository.java
 │   │   │   ├── AppointmentRepository.java
+│   │   │   ├── PaymentRepository.java
 │   │   │   ├── EmailNotificationRepository.java
 │   │   │   └── AddressRepository.java
 │   │   ├── security/
@@ -146,7 +157,9 @@ Vaidhyashala/
 │   │   ├── service/
 │   │   │   ├── AuthService / Impl           # Register + Login logic
 │   │   │   ├── CustomerService / Impl       # Profile management
+│   │   │   ├── DoctorService / Impl         # Doctor dashboard / configuration
 │   │   │   ├── AppointmentService / Impl    # Booking orchestration
+│   │   │   ├── PaymentService / Impl        # Checkout + verification logic
 │   │   │   ├── GoogleCalendarService / Impl # Calendar event + Meet link creation
 │   │   │   ├── EmailService / Impl          # HTML email dispatch
 │   │   │   └── ReminderScheduler.java       # Cron: sends 24h reminders
@@ -186,6 +199,26 @@ customer_profiles
 ├── created_at
 └── updated_at
 
+doctor_profiles
+├── id (UUID, PK)
+├── user_id (FK → users.id)
+├── first_name
+├── last_name
+├── phone_number
+├── speciality (TEXT, list)
+├── department
+├── expert_in (TEXT, list)
+├── education_details (TEXT, JSON list)
+├── certifications (TEXT, JSON list)
+├── about (TEXT)
+├── resume_url
+├── status (PENDING_APPROVAL | ACTIVE | SUSPENDED | OPTED_OUT)
+├── designation
+├── reg_no
+├── profile_image_url
+├── created_at
+└── updated_at
+
 addresses
 ├── id (UUID, PK)
 ├── customer_id (FK → customer_profiles.id)
@@ -212,6 +245,27 @@ email_notifications
 ├── status (PENDING | SENT | FAILED)
 ├── scheduled_send_time            ← Triggered 24h before appointment
 └── sent_at
+
+payments
+├── id (UUID, PK)
+├── appointment_id (FK → appointments.id)
+├── amount
+├── status (PENDING | COMPLETED | FAILED | REFUNDED)
+├── transaction_id
+├── created_at
+└── updated_at
+
+special_slot_requests
+├── id (UUID, PK)
+├── customer_id (FK → customer_profiles.id)
+├── doctor_id (FK → doctor_profiles.id)
+├── requested_date
+├── start_time
+├── end_time
+├── notes
+├── status (PENDING | APPROVED | REJECTED)
+├── created_at
+└── updated_at
 ```
 
 ---
@@ -305,10 +359,10 @@ email_notifications
   "id": "a1b2c3d4-...",
   "startTime": "2026-07-05T10:00:00",
   "endTime": "2026-07-05T10:30:00",
-  "status": "CONFIRMED",
+  "status": "PENDING",
   "description": "Initial consultation for knee pain",
-  "meetLink": "https://meet.google.com/abc-defg-hij",
-  "googleCalendarEventId": "eventIdFromGoogle",
+  "meetLink": null,
+  "googleCalendarEventId": null,
   "createdAt": "2026-06-28T16:30:00",
   "provider": {
     "id": "8c30d954-...",
@@ -323,6 +377,99 @@ email_notifications
 
 ---
 
+### 🩺 Doctor Profile & Dashboard — `/api/v1/doctors`
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET`  | `/api/v1/doctors/me/profile` | ✅ DOCTOR | Get own doctor profile |
+| `PUT`  | `/api/v1/doctors/me/configure` | ✅ DOCTOR | Unified configuration (profile fields, upload profile pic, sync slot list) |
+| `POST` | `/api/v1/doctors/me/resume` | ✅ DOCTOR | Upload and save resume PDF path |
+| `POST` | `/api/v1/doctors/me/opt-out` | ✅ DOCTOR | Voluntarily opt-out |
+| `GET`  | `/api/v1/doctors/me/availability` | ✅ DOCTOR | Get own slot availabilities |
+
+**Unified Configure Dashboard Settings Request** (`multipart/form-data`):
+* `settings`: JSON string (includes profile info & availability slot configurations)
+* `profileImage`: Image file (optional)
+
+```json
+{
+  "profile": {
+    "firstName": "Rahul",
+    "lastName": "Sharma",
+    "phoneNumber": "9876543210",
+    "designation": "Senior Consultant",
+    "regNo": "REG-12345",
+    "about": "Expert cardiologist with 15+ years experience"
+  },
+  "availabilities": [
+    {
+      "availabilityDate": "2026-07-05",
+      "startTime": "09:00:00",
+      "endTime": "13:00:00",
+      "slotDurationMinutes": 30,
+      "consultationFee": 800.00,
+      "offerPercent": 10,
+      "offerLabel": "Weekend Discount"
+    }
+  ]
+}
+```
+
+---
+
+### 💳 Payments — `/api/v1/payments`
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/v1/payments/checkout` | ✅ CUSTOMER | Initiate a pending billing session for an appointment |
+| `POST` | `/api/v1/payments/verify` | ✅ CUSTOMER | Confirm mock payment completion (triggers calendar events & emails) |
+
+**Checkout Request:**
+```json
+{
+  "appointmentId": "a1b2c3d4-..."
+}
+```
+
+**Verify Payment Request:**
+```json
+{
+  "paymentId": "p5q6r7s8-...",
+  "transactionId": "tx-razorpay-998877"
+}
+```
+
+---
+
+### 📩 Special Slot Requests — `/api/v1/special-requests`
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/v1/special-requests` | ✅ CUSTOMER | Customers request a custom slot for a doctor |
+| `GET`  | `/api/v1/special-requests/customer` | ✅ CUSTOMER | Customers view their own custom requests |
+| `GET`  | `/api/v1/special-requests/doctor` | ✅ DOCTOR | Doctors view slot requests sent to them |
+| `PUT`  | `/api/v1/special-requests/{id}/status` | ✅ DOCTOR | Approve or reject a slot request |
+
+**Create Special Slot Request:**
+```json
+{
+  "doctorId": "d3c4b5a6-...",
+  "requestedDate": "2026-07-20",
+  "startTime": "16:00:00",
+  "endTime": "16:45:00",
+  "notes": "Emergency checkup"
+}
+```
+
+**Doctor Update Request Status (Approve/Reject):**
+```json
+{
+  "status": "APPROVED"
+}
+```
+
+---
+
 ## Complete Booking Flow
 
 ```
@@ -330,33 +477,33 @@ Customer → POST /api/v1/appointments
                │
                ▼
     1. Validate customer profile exists
-    2. Validate provider exists and has PROVIDER role
-    3. Check for overlapping appointments (time conflict → 409 Conflict)
+    2. Validate provider exists and has PROVIDER or DOCTOR role
+    3. Check for overlapping appointments (time conflict with CONFIRMED slots → 409 Conflict)
     4. Save appointment record (status = PENDING)
                │
                ▼
-    5. Call Google Calendar API (Service Account)
+Customer → POST /api/v1/payments/checkout
+               │
+               ▼
+    5. Retrieve base fee and apply discount (e.g. 50% off for first consultation)
+    6. Save Payment record (status = PENDING)
+               │
+               ▼
+Customer → POST /api/v1/payments/verify
+               │
+               ▼
+    7. Update Payment status = COMPLETED, store gateway transaction ID
+    8. Update Appointment status = CONFIRMED
+    9. Call Google Calendar API (Service Account)
        ├─ Create event with attendee invite
        ├─ Request Google Meet conference link (conferenceDataVersion=1)
        ├─ Extract hangoutLink from response
        └─ Fallback: retry without Meet if account doesn't support it
-               │
-               ▼
-    6. Update appointment record:
+   10. Update Appointment record:
        ├─ google_calendar_event_id = event ID from Google
-       ├─ meet_link = https://meet.google.com/xxx-yyy-zzz
-       └─ status = CONFIRMED
-               │
-               ▼
-    7. Send HTML Confirmation Email (async):
-       └─ Contains: date/time, "📹 Join Google Meet" button, meet link URL
-               │
-               ▼
-    8. Schedule Reminder entry in email_notifications:
-       └─ scheduled_send_time = startTime - 24 hours
-               │
-               ▼
-    ← Return 201 Created with full AppointmentResponseDto (includes meetLink)
+       └─ meet_link = https://meet.google.com/xxx-yyy-zzz
+   11. Send HTML Confirmation Email (async)
+   12. Schedule 24h Reminder entry in email_notifications
 ```
 
 ---
@@ -557,13 +704,33 @@ Header: `Authorization: Bearer <your_token>`
   "description": "Initial wellness consultation"
 }
 ```
-> ✅ Response will include `"meetLink": "https://meet.google.com/..."` if your Google account supports it.
+> 📌 The initial appointment response returns status `PENDING` with `meetLink` and `googleCalendarEventId` set to `null`. Proceed to checkout and payment verification to confirm the booking.
 
-### Step 4 — View Your Appointments (Customer)
+### Step 4 — Checkout Appointment Payment
+`POST http://localhost:8080/api/v1/payments/checkout`
+Header: `Authorization: Bearer <customer_token>`
+```json
+{
+  "appointmentId": "<appointment_id>"
+}
+```
+
+### Step 5 — Verify Payment
+`POST http://localhost:8080/api/v1/payments/verify`
+Header: `Authorization: Bearer <customer_token>`
+```json
+{
+  "paymentId": "<payment_id>",
+  "transactionId": "mock-tx-123"
+}
+```
+> ✅ On verification success, the appointment status changes to `CONFIRMED`, generating the Google Calendar event and dispatching confirmation emails.
+
+### Step 6 — View Your Appointments (Customer)
 `GET http://localhost:8080/api/v1/appointments/me`  
 Header: `Authorization: Bearer <customer_token>`
 
-### Step 5 — View All Bookings (Provider)
+### Step 7 — View All Bookings (Provider)
 `GET http://localhost:8080/api/v1/appointments`  
 Header: `Authorization: Bearer <provider_token>`
 
@@ -588,7 +755,10 @@ Use this `providerId` directly in the `Book Appointment` request body without ne
 
 - **Duplicate email prevention**: Registration rejects any email already in the `users` table with `409 Conflict`
 - **Slot conflict detection**: Overlapping appointment times for the same provider are blocked at booking
+- **Deferred booking activation via payment**: Appointments are created as `PENDING` without triggering GCal integrations, Meet link creation, or email dispatches. These integrations are asynchronously executed upon successful payment verification.
+- **Unified doctor configuration**: Updating profile attributes, uploading a profile picture, and synchronizing slot configurations (including deactivating slots missing from the request) are handled in a single PUT request.
 - **Meet link graceful fallback**: If Google Meet generation fails (e.g., personal account restrictions), the event is still created without the Meet link — emails gracefully show a "check your calendar" message instead
 - **Role-filtered responses**: `AppointmentResponseDto` uses `@JsonInclude(NON_NULL)` — the `customer` field is `null` for customer responses and populated only for provider responses
-- **Async emails**: Confirmation emails use `@Async` so they never block the booking API response
+- **Async emails**: Confirmation emails use `@Async` so they never block the payment verification API response
 - **Persistent local DB**: Uses H2 file-based database (`./data/vaidhyashala`) instead of in-memory, so data survives server restarts during development
+

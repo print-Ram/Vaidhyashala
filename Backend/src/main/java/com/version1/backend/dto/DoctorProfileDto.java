@@ -46,6 +46,10 @@ public class DoctorProfileDto {
     /** URL/path to the uploaded resume (read-only after upload). */
     private String resumeUrl;
 
+    private String designation;
+    private String regNo;
+    private String profileImageUrl;
+
     /** Current approval status — set by admin, read-only for doctor. */
     private DoctorStatus status;
 }

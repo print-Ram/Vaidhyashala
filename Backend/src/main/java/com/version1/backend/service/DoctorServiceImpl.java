@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -64,6 +65,8 @@ public class DoctorServiceImpl implements DoctorService {
         if (dto.getEducationDetails() != null) profile.setEducationDetails(dto.getEducationDetails());
         if (dto.getCertifications() != null)   profile.setCertifications(dto.getCertifications());
         if (dto.getAbout() != null)            profile.setAbout(dto.getAbout());
+        if (dto.getDesignation() != null)      profile.setDesignation(dto.getDesignation());
+        if (dto.getRegNo() != null)            profile.setRegNo(dto.getRegNo());
 
         return toDto(doctorProfileRepository.save(profile));
     }
@@ -153,7 +156,7 @@ public class DoctorServiceImpl implements DoctorService {
         if (dto.getSlotDurationMinutes() > 0) availability.setSlotDurationMinutes(dto.getSlotDurationMinutes());
         availability.setOfferPercent(dto.getOfferPercent());
         availability.setOfferLabel(dto.getOfferLabel());
-        availability.setActive(dto.isActive());
+        if (dto.getIsActive() != null) availability.setActive(dto.getIsActive());
 
         return toAvailabilityDto(availabilityRepository.save(availability));
     }
@@ -246,6 +249,9 @@ public class DoctorServiceImpl implements DoctorService {
                 .certifications(profile.getCertifications())
                 .about(profile.getAbout())
                 .resumeUrl(profile.getResumeUrl())
+                .designation(profile.getDesignation())
+                .regNo(profile.getRegNo())
+                .profileImageUrl(profile.getProfileImageUrl())
                 .status(profile.getStatus())
                 .build();
     }
@@ -301,6 +307,8 @@ public class DoctorServiceImpl implements DoctorService {
                 .educationDetails(dto.getEducationDetails())
                 .certifications(dto.getCertifications())
                 .about(dto.getAbout())
+                .designation(dto.getDesignation())
+                .regNo(dto.getRegNo())
                 .status(DoctorStatus.ACTIVE)
                 .build();
         DoctorProfile savedProfile = doctorProfileRepository.save(profile);
@@ -323,6 +331,8 @@ public class DoctorServiceImpl implements DoctorService {
         if (dto.getEducationDetails() != null) profile.setEducationDetails(dto.getEducationDetails());
         if (dto.getCertifications() != null)   profile.setCertifications(dto.getCertifications());
         if (dto.getAbout() != null)            profile.setAbout(dto.getAbout());
+        if (dto.getDesignation() != null)      profile.setDesignation(dto.getDesignation());
+        if (dto.getRegNo() != null)            profile.setRegNo(dto.getRegNo());
         if (dto.getStatus() != null)           profile.setStatus(dto.getStatus());
 
         return toDto(doctorProfileRepository.save(profile));
@@ -373,5 +383,97 @@ public class DoctorServiceImpl implements DoctorService {
             throw new CustomException("Doctor profile is not active/approved", HttpStatus.FORBIDDEN);
         }
         return toDto(profile);
+    }
+
+    @Override
+    @Transactional
+    public DoctorProfileDto configureMyDashboard(UUID userId, DoctorConfigurationRequestDto config, MultipartFile profileImageFile) throws Exception {
+        DoctorProfile profile = findProfileByUserId(userId);
+
+        DoctorProfileDto profileDto = config.getProfile();
+        if (profileDto != null) {
+            if (profileDto.getFirstName() != null)       profile.setFirstName(profileDto.getFirstName());
+            if (profileDto.getLastName() != null)         profile.setLastName(profileDto.getLastName());
+            if (profileDto.getPhoneNumber() != null)      profile.setPhoneNumber(profileDto.getPhoneNumber());
+            if (profileDto.getSpecialization() != null)   profile.setSpecialization(profileDto.getSpecialization());
+            if (profileDto.getDepartment() != null)       profile.setDepartment(profileDto.getDepartment());
+            if (profileDto.getExpertIn() != null)         profile.setExpertIn(profileDto.getExpertIn());
+            if (profileDto.getEducationDetails() != null) profile.setEducationDetails(profileDto.getEducationDetails());
+            if (profileDto.getCertifications() != null)   profile.setCertifications(profileDto.getCertifications());
+            if (profileDto.getAbout() != null)            profile.setAbout(profileDto.getAbout());
+            if (profileDto.getDesignation() != null)      profile.setDesignation(profileDto.getDesignation());
+            if (profileDto.getRegNo() != null)            profile.setRegNo(profileDto.getRegNo());
+        }
+
+        // Profile image upload
+        if (profileImageFile != null && !profileImageFile.isEmpty()) {
+            String uploadDir = "uploads/profile-pics/";
+            java.io.File dir = new java.io.File(uploadDir);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            String filename = userId.toString() + "_" + System.currentTimeMillis() + "_" + profileImageFile.getOriginalFilename();
+            java.nio.file.Path filepath = java.nio.file.Paths.get(uploadDir, filename);
+            java.nio.file.Files.write(filepath, profileImageFile.getBytes());
+            profile.setProfileImageUrl(uploadDir + filename);
+        }
+
+        // Sync availabilities
+        if (config.getAvailabilities() != null) {
+            // Fetch all currently active availability windows for this doctor
+            List<DoctorAvailability> existing = availabilityRepository.findByDoctorIdAndIsActiveTrue(profile.getId());
+
+            // Build map of existing ID -> availability
+            java.util.Map<UUID, DoctorAvailability> existingMap = existing.stream()
+                    .collect(java.util.stream.Collectors.toMap(DoctorAvailability::getId, a -> a));
+
+            List<UUID> incomingIds = new java.util.ArrayList<>();
+
+            for (DoctorAvailabilityDto availabilityDto : config.getAvailabilities()) {
+                if (availabilityDto.getId() != null && existingMap.containsKey(availabilityDto.getId())) {
+                    // Update existing
+                    DoctorAvailability availability = existingMap.get(availabilityDto.getId());
+                    if (availabilityDto.getAvailabilityDate() != null) availability.setAvailabilityDate(availabilityDto.getAvailabilityDate());
+                    if (availabilityDto.getDayOfWeek() != null)       availability.setDayOfWeek(availabilityDto.getDayOfWeek().toUpperCase());
+                    if (availabilityDto.getStartTime() != null)       availability.setStartTime(availabilityDto.getStartTime());
+                    if (availabilityDto.getEndTime() != null)         availability.setEndTime(availabilityDto.getEndTime());
+                    if (availabilityDto.getSlotDurationMinutes() > 0)  availability.setSlotDurationMinutes(availabilityDto.getSlotDurationMinutes());
+                    if (availabilityDto.getConsultationFee() != null)  availability.setConsultationFee(availabilityDto.getConsultationFee());
+                    if (availabilityDto.getSlotStatus() != null)       availability.setSlotStatus(availabilityDto.getSlotStatus());
+                    availability.setOfferPercent(availabilityDto.getOfferPercent());
+                    availability.setOfferLabel(availabilityDto.getOfferLabel());
+                    availability.setActive(true);
+                    availabilityRepository.save(availability);
+                    incomingIds.add(availabilityDto.getId());
+                } else {
+                    // Create new
+                    DoctorAvailability availability = DoctorAvailability.builder()
+                            .doctor(profile)
+                            .availabilityDate(availabilityDto.getAvailabilityDate())
+                            .dayOfWeek(availabilityDto.getDayOfWeek() != null ? availabilityDto.getDayOfWeek().toUpperCase() : null)
+                            .startTime(availabilityDto.getStartTime())
+                            .endTime(availabilityDto.getEndTime())
+                            .slotDurationMinutes(availabilityDto.getSlotDurationMinutes() > 0 ? availabilityDto.getSlotDurationMinutes() : 30)
+                            .consultationFee(availabilityDto.getConsultationFee())
+                            .slotStatus(availabilityDto.getSlotStatus() != null ? availabilityDto.getSlotStatus() : com.version1.backend.enums.SlotStatus.NORMAL)
+                            .offerPercent(availabilityDto.getOfferPercent())
+                            .offerLabel(availabilityDto.getOfferLabel())
+                            .isActive(true)
+                            .build();
+                    DoctorAvailability saved = availabilityRepository.save(availability);
+                    incomingIds.add(saved.getId());
+                }
+            }
+
+            // Deactivate any database records not present in the update payload
+            for (DoctorAvailability activeWindow : existing) {
+                if (!incomingIds.contains(activeWindow.getId())) {
+                    activeWindow.setActive(false);
+                    availabilityRepository.save(activeWindow);
+                }
+            }
+        }
+
+        return toDto(doctorProfileRepository.save(profile));
     }
 }

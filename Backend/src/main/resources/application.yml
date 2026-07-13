@@ -42,16 +42,11 @@ spring:
               - email
               - profile
 
-  # ---- Spring AI Configuration ----
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY:dummy-key-for-local-dev-and-tests}
-
 # ---- Application Custom Properties ----
 app:
   jwt:
     secret: ${JWT_SECRET:dGhpc2lzYXZlcnlzZWN1cmVhbmRsYXJnZWJhc2U2NHNpZ25pbmdrZXlmb3J2YWlkaHlhc2hhbGFkZXZlbG9wbWVudA==}
-    expiration-ms: 60000        # 1 hour
+    expiration-ms: 3600000        # 1 hour
     refresh-expiration-ms: 604800000  # 7 days
   google:
     credentials:
@@ -60,6 +55,8 @@ app:
       id: ${GOOGLE_CALENDAR_ID:primary}
   scheduler:
     reminder-cron: "0 */15 * * * *"   # Every 15 minutes
+  payment:
+    gateway: ${PAYMENT_GATEWAY:test}
   seed:
     provider:
       email: ${SEED_PROVIDER_EMAIL:}
