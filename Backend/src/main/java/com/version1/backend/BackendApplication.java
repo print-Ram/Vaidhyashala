@@ -39,6 +39,13 @@ public class BackendApplication {
 				System.err.println("SCHEMA UPDATE ERROR: Failed to drop users_role_check: " + e.getMessage());
 			}
 
+			try {
+				jdbcTemplate.execute("ALTER TABLE appointments RENAME COLUMN provider_id TO doctor_id");
+				System.out.println("SCHEMA UPDATE: Renamed provider_id to doctor_id in appointments table.");
+			} catch (Exception e) {
+				// Column provider_id already renamed or does not exist
+			}
+
 			if (!userRepository.existsByEmail(email)) {
 				User provider = User.builder()
 						.email(email)
