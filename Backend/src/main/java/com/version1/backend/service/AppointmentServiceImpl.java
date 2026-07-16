@@ -126,7 +126,10 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentResponseDto.DoctorInfo> getAllDoctors() {
-        return userRepository.findByRole(Role.PROVIDER).stream()
+        List<User> doctors = new java.util.ArrayList<>(userRepository.findByRole(Role.DOCTOR));
+        doctors.addAll(userRepository.findByRole(Role.PROVIDER));
+        return doctors.stream()
+                .filter(user -> user.getEmail() != null && !user.getEmail().trim().isEmpty())
                 .map(user -> new AppointmentResponseDto.DoctorInfo(user.getId(), user.getEmail(), user.getEmail()))
                 .collect(Collectors.toList());
     }

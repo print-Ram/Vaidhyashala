@@ -56,7 +56,12 @@ try {
     if ($doctors.Count -eq 0) {
         throw "No doctors found in the database"
     }
-    $doctor = $doctors[0]
+    $validDoctors = @($doctors | Where-Object { $_.email -and $_.email.Trim() -ne "" })
+    if ($validDoctors.Count -gt 0) {
+        $doctor = $validDoctors[0]
+    } else {
+        $doctor = $doctors[0]
+    }
     $doctorId = $doctor.id
     $doctorEmail = $doctor.email
     Write-Host "✅ Found doctor: $doctorEmail (ID: $doctorId)" -ForegroundColor Green
