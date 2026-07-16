@@ -15,27 +15,27 @@ import java.util.UUID;
 public interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
 
     List<Appointment> findByCustomerId(UUID customerId);
-    List<Appointment> findByProviderId(UUID providerId);
+    List<Appointment> findByDoctorId(UUID doctorId);
 
-    @Query("SELECT a FROM Appointment a WHERE a.provider.id = :providerId " +
+    @Query("SELECT a FROM Appointment a WHERE a.doctor.id = :doctorId " +
            "AND a.status = :status " +
            "AND ((a.startTime >= :start AND a.startTime < :end) " +
            "OR (a.endTime > :start AND a.endTime <= :end) " +
            "OR (a.startTime <= :start AND a.endTime >= :end))")
     List<Appointment> findOverlappingAppointments(
-            @Param("providerId") UUID providerId,
+            @Param("doctorId") UUID doctorId,
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end,
             @Param("status") AppointmentStatus status
     );
 
     /**
-     * Count CONFIRMED appointments between a specific doctor (provider) and customer.
+     * Count CONFIRMED appointments between a specific doctor and customer.
      * Used to determine if the upcoming booking is the customer's FIRST appointment
      * with this doctor, in order to apply the 50% first-appointment discount.
      */
     @Query("SELECT COUNT(a) FROM Appointment a " +
-           "WHERE a.provider.id = :doctorUserId " +
+           "WHERE a.doctor.id = :doctorUserId " +
            "AND a.customer.id = :customerId " +
            "AND a.status = :status")
     long countByDoctorUserIdAndCustomerIdAndStatus(
@@ -50,7 +50,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
      * for the coming 3 days.
      */
     @Query("SELECT COUNT(a) FROM Appointment a " +
-           "WHERE a.provider.id = :doctorUserId " +
+           "WHERE a.doctor.id = :doctorUserId " +
            "AND a.status = :status " +
            "AND a.startTime >= :rangeStart " +
            "AND a.startTime < :rangeEnd")
@@ -65,7 +65,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
      * Fetch appointments for a doctor within a time window (for slot-grid overlap check).
      */
     @Query("SELECT a FROM Appointment a " +
-           "WHERE a.provider.id = :doctorUserId " +
+           "WHERE a.doctor.id = :doctorUserId " +
            "AND a.status = :status " +
            "AND a.startTime >= :rangeStart " +
            "AND a.startTime < :rangeEnd")

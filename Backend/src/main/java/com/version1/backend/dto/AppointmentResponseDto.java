@@ -25,8 +25,8 @@ public class AppointmentResponseDto {
     private String googleCalendarEventId;
     private LocalDateTime createdAt;
 
-    // Provider info (shown to both customer and provider)
-    private ProviderInfo provider;
+    // Doctor info (shown to both customer and doctor/provider)
+    private DoctorInfo doctor;
 
     // Customer info (shown to provider only)
     private CustomerInfo customer;
@@ -34,7 +34,7 @@ public class AppointmentResponseDto {
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class ProviderInfo {
+    public static class DoctorInfo {
         private UUID id;
         private String name;
         private String email;

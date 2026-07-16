@@ -28,8 +28,8 @@ public class Appointment {
     private CustomerProfile customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "provider_id", nullable = false)
-    private User provider;
+    @JoinColumn(name = "doctor_id", nullable = false)
+    private User doctor;
 
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;

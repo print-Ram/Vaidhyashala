@@ -12,7 +12,7 @@ import java.util.UUID;
 public class AppointmentCreateDto {
 
     @NotNull
-    private UUID providerId;
+    private UUID doctorId;
 
     @NotNull
     @Future

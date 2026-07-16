@@ -51,30 +51,30 @@ public class AppointmentServiceImpl implements AppointmentService {
         CustomerProfile customer = customerProfileRepository.findByUserId(customerUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer profile not found"));
 
-        User provider = userRepository.findById(dto.getProviderId())
-                .orElseThrow(() -> new ResourceNotFoundException("Provider not found with ID: " + dto.getProviderId()));
+        User doctor = userRepository.findById(dto.getDoctorId())
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with ID: " + dto.getDoctorId()));
 
         // Accept both DOCTOR (individual doctors) and PROVIDER (admin/owner acting as doctor)
-        if (provider.getRole() != Role.DOCTOR && provider.getRole() != Role.PROVIDER) {
+        if (doctor.getRole() != Role.DOCTOR && doctor.getRole() != Role.PROVIDER) {
             throw new CustomException("Selected user is not a doctor or provider", HttpStatus.BAD_REQUEST);
         }
 
         // 1. Check for overlapping appointments
         List<Appointment> overlaps = appointmentRepository.findOverlappingAppointments(
-                dto.getProviderId(),
+                dto.getDoctorId(),
                 dto.getStartTime(),
                 dto.getEndTime(),
                 AppointmentStatus.CONFIRMED
         );
 
         if (!overlaps.isEmpty()) {
-            throw new CustomException("This slot is already booked for the provider", HttpStatus.CONFLICT);
+            throw new CustomException("This slot is already booked for the doctor", HttpStatus.CONFLICT);
         }
 
         // 2. First-appointment 50% discount logic
         //    Count all prior CONFIRMED appointments between this doctor and this customer.
         long priorAppointmentCount = appointmentRepository.countByDoctorUserIdAndCustomerIdAndStatus(
-                provider.getId(),
+                doctor.getId(),
                 customer.getId(),
                 AppointmentStatus.CONFIRMED
         );
@@ -88,7 +88,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         // 3. Create the internal appointment record
         Appointment appointment = Appointment.builder()
                 .customer(customer)
-                .provider(provider)
+                .doctor(doctor)
                 .startTime(dto.getStartTime())
                 .endTime(dto.getEndTime())
                 .status(AppointmentStatus.PENDING)
@@ -113,8 +113,8 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Appointment> getAppointmentsByProviderId(UUID providerId) {
-        return appointmentRepository.findByProviderId(providerId);
+    public List<Appointment> getAppointmentsByDoctorId(UUID doctorId) {
+        return appointmentRepository.findByDoctorId(doctorId);
     }
 
     @Override
@@ -125,9 +125,9 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AppointmentResponseDto.ProviderInfo> getAllProviders() {
+    public List<AppointmentResponseDto.DoctorInfo> getAllDoctors() {
         return userRepository.findByRole(Role.PROVIDER).stream()
-                .map(user -> new AppointmentResponseDto.ProviderInfo(user.getId(), user.getEmail(), user.getEmail()))
+                .map(user -> new AppointmentResponseDto.DoctorInfo(user.getId(), user.getEmail(), user.getEmail()))
                 .collect(Collectors.toList());
     }
 }

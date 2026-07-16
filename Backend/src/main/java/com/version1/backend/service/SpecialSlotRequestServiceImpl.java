@@ -146,7 +146,7 @@ public class SpecialSlotRequestServiceImpl implements SpecialSlotRequestService 
 
             Appointment appointment = Appointment.builder()
                     .customer(request.getCustomer())
-                    .provider(request.getDoctor().getUser())
+                    .doctor(request.getDoctor().getUser())
                     .startTime(request.getRequestedDate().atTime(request.getStartTime()))
                     .endTime(request.getRequestedDate().atTime(request.getEndTime()))
                     .status(AppointmentStatus.PENDING)

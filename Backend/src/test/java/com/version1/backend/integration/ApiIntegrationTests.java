@@ -71,6 +71,9 @@ public class ApiIntegrationTests {
     @Autowired
     private EmailNotificationRepository emailNotificationRepository;
 
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
     @MockitoBean
     private GoogleCalendarService googleCalendarService;
 
@@ -96,6 +99,7 @@ public class ApiIntegrationTests {
         addressRepository.deleteAll();
         customerProfileRepository.deleteAll();
         doctorProfileRepository.deleteAll();
+        refreshTokenRepository.deleteAll();
         userRepository.deleteAll();
 
         // 1. Seed doctor
@@ -199,7 +203,7 @@ public class ApiIntegrationTests {
         // Pre-create pending appointment
         Appointment appointment = Appointment.builder()
                 .customer(customerProfile)
-                .provider(doctorUser)
+                .doctor(doctorUser)
                 .startTime(LocalDateTime.now().plusDays(1))
                 .endTime(LocalDateTime.now().plusDays(1).plusMinutes(30))
                 .status(AppointmentStatus.PENDING)

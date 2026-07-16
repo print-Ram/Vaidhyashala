@@ -13,6 +13,7 @@ import com.version1.backend.repository.CustomerProfileRepository;
 import com.version1.backend.repository.DoctorProfileRepository;
 import com.version1.backend.repository.EmailNotificationRepository;
 import com.version1.backend.repository.PaymentRepository;
+import com.version1.backend.repository.RefreshTokenRepository;
 import com.version1.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,6 +59,9 @@ public class AppointmentServiceTests {
     @Autowired
     private DoctorProfileRepository doctorProfileRepository;
 
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
     @MockitoBean
     private GoogleCalendarService googleCalendarService;
 
@@ -76,6 +80,7 @@ public class AppointmentServiceTests {
         addressRepository.deleteAll();
         customerProfileRepository.deleteAll();
         doctorProfileRepository.deleteAll();
+        refreshTokenRepository.deleteAll();
         userRepository.deleteAll();
 
         // 1. Create provider user
@@ -111,7 +116,7 @@ public class AppointmentServiceTests {
                 .thenReturn(new CalendarEventResult("gcal-event-123", null));
 
         AppointmentCreateDto dto = new AppointmentCreateDto();
-        dto.setProviderId(provider.getId());
+        dto.setDoctorId(provider.getId());
         dto.setStartTime(LocalDateTime.now().plusDays(1));
         dto.setEndTime(LocalDateTime.now().plusDays(1).plusMinutes(45));
         dto.setDescription("General checkup");
@@ -145,7 +150,7 @@ public class AppointmentServiceTests {
         LocalDateTime time = LocalDateTime.now().plusDays(2);
 
         AppointmentCreateDto firstAppointmentDto = new AppointmentCreateDto();
-        firstAppointmentDto.setProviderId(provider.getId());
+        firstAppointmentDto.setDoctorId(provider.getId());
         firstAppointmentDto.setStartTime(time);
         firstAppointmentDto.setEndTime(time.plusMinutes(45));
         firstAppointmentDto.setDescription("First consultation");
@@ -158,7 +163,7 @@ public class AppointmentServiceTests {
 
         // Try to schedule another appointment during the same slot
         AppointmentCreateDto secondAppointment = new AppointmentCreateDto();
-        secondAppointment.setProviderId(provider.getId());
+        secondAppointment.setDoctorId(provider.getId());
         secondAppointment.setStartTime(time.plusMinutes(15));
         secondAppointment.setEndTime(time.plusMinutes(60));
         secondAppointment.setDescription("Overlap consultation");

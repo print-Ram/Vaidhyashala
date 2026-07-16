@@ -6,6 +6,9 @@ import com.version1.backend.dto.TokenResponseDto;
 import com.version1.backend.dto.UserRegistrationDto;
 import com.version1.backend.dto.TokenRefreshRequestDto;
 import com.version1.backend.service.AuthService;
+import com.version1.backend.exception.CustomException;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.CookieValue;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,23 +35,29 @@ public class AuthController {
     @Value("${app.jwt.refresh-expiration-ms:604800000}")
     private long refreshExpirationInMs;
 
+    @Value("${app.cookie.secure:true}")
+    private boolean cookieSecure;
+
+    @Value("${app.cookie.same-site:Lax}")
+    private String cookieSameSite;
+
     private void setTokenCookies(HttpServletResponse response, TokenResponseDto tokenResponse) {
         // Access Token Cookie
         ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", tokenResponse.getAccessToken())
                 .httpOnly(true)
-                .secure(true)
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(jwtExpirationInMs / 1000)
-                .sameSite("Lax")
+                .sameSite(cookieSameSite)
                 .build();
 
         // Refresh Token Cookie
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokenResponse.getRefreshToken())
                 .httpOnly(true)
-                .secure(true)
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(refreshExpirationInMs / 1000)
-                .sameSite("Lax")
+                .sameSite(cookieSameSite)
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
@@ -79,8 +88,23 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<TokenResponseDto> refreshAccessToken(@Valid @RequestBody TokenRefreshRequestDto refreshRequestDto, HttpServletResponse response) {
-        TokenResponseDto tokenResponse = authService.refreshAccessToken(refreshRequestDto.getRefreshToken());
+    public ResponseEntity<TokenResponseDto> refreshAccessToken(
+            @RequestBody(required = false) TokenRefreshRequestDto refreshRequestDto,
+            @CookieValue(name = "refreshToken", required = false) String cookieRefreshToken,
+            HttpServletResponse response) {
+
+        String tokenToUse = null;
+        if (refreshRequestDto != null && StringUtils.hasText(refreshRequestDto.getRefreshToken())) {
+            tokenToUse = refreshRequestDto.getRefreshToken();
+        } else if (StringUtils.hasText(cookieRefreshToken)) {
+            tokenToUse = cookieRefreshToken;
+        }
+
+        if (tokenToUse == null) {
+            throw new CustomException("Refresh token is missing", HttpStatus.BAD_REQUEST);
+        }
+
+        TokenResponseDto tokenResponse = authService.refreshAccessToken(tokenToUse);
         setTokenCookies(response, tokenResponse);
         return ResponseEntity.ok(tokenResponse);
     }
@@ -89,18 +113,18 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> logout(HttpServletResponse response) {
         ResponseCookie deleteAccessCookie = ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite(cookieSameSite)
                 .build();
 
         ResponseCookie deleteRefreshCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite(cookieSameSite)
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, deleteAccessCookie.toString());

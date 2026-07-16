@@ -59,6 +59,9 @@ public class SpecialSlotRequestServiceTests {
     @Autowired
     private EmailNotificationRepository emailNotificationRepository;
 
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
     @MockitoBean
     private GoogleCalendarService googleCalendarService;
 
@@ -80,6 +83,7 @@ public class SpecialSlotRequestServiceTests {
         addressRepository.deleteAll();
         customerProfileRepository.deleteAll();
         doctorProfileRepository.deleteAll();
+        refreshTokenRepository.deleteAll();
         userRepository.deleteAll();
 
         // 1. Create doctor

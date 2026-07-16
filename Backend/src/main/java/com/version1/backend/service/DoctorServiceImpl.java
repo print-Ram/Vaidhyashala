@@ -346,7 +346,7 @@ public class DoctorServiceImpl implements DoctorService {
         User user = profile.getUser();
 
         // Check if doctor has appointments
-        List<Appointment> appointments = appointmentRepository.findByProviderId(user.getId());
+        List<Appointment> appointments = appointmentRepository.findByDoctorId(user.getId());
         if (!appointments.isEmpty()) {
             throw new CustomException("Cannot delete doctor: they have associated appointments. Suspend them instead.", HttpStatus.BAD_REQUEST);
         }

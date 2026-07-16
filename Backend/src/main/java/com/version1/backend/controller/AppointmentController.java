@@ -49,7 +49,7 @@ public class AppointmentController {
         if (isProvider) {
             appointments = appointmentService.getAllAppointments();
         } else if (isDoctor) {
-            appointments = appointmentService.getAppointmentsByProviderId(userPrincipal.getId());
+            appointments = appointmentService.getAppointmentsByDoctorId(userPrincipal.getId());
         } else {
             appointments = appointmentService.getAppointmentsByCustomerUserId(userPrincipal.getId());
         }
@@ -70,7 +70,7 @@ public class AppointmentController {
         boolean isProviderOrDoctor = userPrincipal.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_PROVIDER") || a.getAuthority().equals("ROLE_DOCTOR"));
         List<Appointment> appointments = isProviderOrDoctor
-                ? appointmentService.getAppointmentsByProviderId(userPrincipal.getId())
+                ? appointmentService.getAppointmentsByDoctorId(userPrincipal.getId())
                 : appointmentService.getAppointmentsByCustomerUserId(userPrincipal.getId());
 
         return ResponseEntity.ok(appointments.stream()
@@ -79,13 +79,13 @@ public class AppointmentController {
     }
 
     /**
-     * GET /api/v1/appointments/providers
-     * Returns list of all available providers (id, name, email) for booking dropdowns.
+     * GET /api/v1/appointments/doctors
+     * Returns list of all available doctors (id, name, email) for booking dropdowns.
      */
-    @GetMapping("/providers")
+    @GetMapping("/doctors")
     @PreAuthorize("hasAnyRole('CUSTOMER', 'PROVIDER')")
-    public ResponseEntity<List<AppointmentResponseDto.ProviderInfo>> getProviders() {
-        return ResponseEntity.ok(appointmentService.getAllProviders());
+    public ResponseEntity<List<AppointmentResponseDto.DoctorInfo>> getDoctors() {
+        return ResponseEntity.ok(appointmentService.getAllDoctors());
     }
 
     /**
@@ -94,10 +94,10 @@ public class AppointmentController {
      * @param includeCustomer Whether to include customer info (PROVIDER only).
      */
     private AppointmentResponseDto toDto(Appointment appointment, boolean includeCustomer) {
-        AppointmentResponseDto.ProviderInfo providerInfo = new AppointmentResponseDto.ProviderInfo(
-                appointment.getProvider().getId(),
-                appointment.getProvider().getEmail(), // Provider name is their email (User entity has no separate name field)
-                appointment.getProvider().getEmail()
+        AppointmentResponseDto.DoctorInfo doctorInfo = new AppointmentResponseDto.DoctorInfo(
+                appointment.getDoctor().getId(),
+                appointment.getDoctor().getEmail(), // Doctor name is their email (User entity has no separate name field)
+                appointment.getDoctor().getEmail()
         );
 
         AppointmentResponseDto.CustomerInfo customerInfo = null;
@@ -118,7 +118,7 @@ public class AppointmentController {
                 .meetLink(appointment.getMeetLink())
                 .googleCalendarEventId(appointment.getGoogleCalendarEventId())
                 .createdAt(appointment.getCreatedAt())
-                .provider(providerInfo)
+                .doctor(doctorInfo)
                 .customer(customerInfo)
                 .build();
     }

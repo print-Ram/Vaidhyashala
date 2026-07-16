@@ -48,6 +48,9 @@ app:
     secret: ${JWT_SECRET:dGhpc2lzYXZlcnlzZWN1cmVhbmRsYXJnZWJhc2U2NHNpZ25pbmdrZXlmb3J2YWlkaHlhc2hhbGFkZXZlbG9wbWVudA==}
     expiration-ms: 3600000        # 1 hour
     refresh-expiration-ms: 604800000  # 7 days
+  cookie:
+    secure: true
+    same-site: Lax
   google:
     credentials:
       json: ${GOOGLE_CREDENTIALS_JSON:}
@@ -91,6 +94,9 @@ app:
     calendar:
       id: mssreeram65@gmail.com
       invite-attendees: false
+  cookie:
+    secure: false
+    same-site: Lax
 
 ---
 # =============================================

@@ -18,6 +18,7 @@ import com.version1.backend.repository.CustomerProfileRepository;
 import com.version1.backend.repository.DoctorProfileRepository;
 import com.version1.backend.repository.EmailNotificationRepository;
 import com.version1.backend.repository.PaymentRepository;
+import com.version1.backend.repository.RefreshTokenRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -52,6 +53,9 @@ public class AuthServiceTests {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
     @MockitoBean
     private JavaMailSender mailSender; // Mock mail sender to avoid connection failures in tests
 
@@ -66,6 +70,7 @@ public class AuthServiceTests {
         addressRepository.deleteAll();
         customerProfileRepository.deleteAll();
         doctorProfileRepository.deleteAll();
+        refreshTokenRepository.deleteAll();
         userRepository.deleteAll();
     }
 

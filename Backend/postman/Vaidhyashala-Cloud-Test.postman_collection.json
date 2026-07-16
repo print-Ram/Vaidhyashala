@@ -14,7 +14,7 @@
       "value": "DummyPass123!"
     },
     {
-      "key": "providerId",
+      "key": "doctorId",
       "value": ""
     },
     {
@@ -115,15 +115,15 @@
       }
     },
     {
-      "name": "4. Get seeded providers",
+      "name": "4. Get seeded doctors",
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test('At least one provider is available', () => pm.expect(pm.response.json().length).to.be.above(0));",
-              "const provider = pm.response.json()[0];",
-              "pm.collectionVariables.set('providerId', provider.id);"
+              "pm.test('At least one doctor is available', () => pm.expect(pm.response.json().length).to.be.above(0));",
+              "const doctor = pm.response.json()[0];",
+              "pm.collectionVariables.set('doctorId', doctor.id);"
             ],
             "type": "text/javascript"
           }
@@ -137,7 +137,7 @@
             "value": "Bearer {{accessToken}}"
           }
         ],
-        "url": "{{baseUrl}}/appointments/providers"
+        "url": "{{baseUrl}}/appointments/doctors"
       }
     },
     {
@@ -182,7 +182,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"providerId\": \"{{providerId}}\",\n  \"startTime\": \"{{appointmentStart}}\",\n  \"endTime\": \"{{appointmentEnd}}\",\n  \"description\": \"Cloud test appointment\",\n  \"consultationFee\": 500.00,\n  \"offerPercent\": 0\n}"
+          "raw": "{\n  \"doctorId\": \"{{doctorId}}\",\n  \"startTime\": \"{{appointmentStart}}\",\n  \"endTime\": \"{{appointmentEnd}}\",\n  \"description\": \"Cloud test appointment\",\n  \"consultationFee\": 500.00,\n  \"offerPercent\": 0\n}"
         },
         "url": "{{baseUrl}}/appointments"
       }

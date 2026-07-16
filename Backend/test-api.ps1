@@ -2,8 +2,7 @@
 # This script automates registering a unique customer, logging in to get a JWT token,
 # and booking an appointment with the seeded provider.
 
-$baseUrl = "http://localhost:8080"
-$providerId = "8c30d954-dd77-4af9-8056-c8e1fa0e0eb5"
+$baseUrl = if ($env:API_BASE_URL) { $env:API_BASE_URL } else { "http://localhost:8080" }
 $uniqueId = [DateTimeOffset]::Now.ToUnixTimeSeconds()
 $customerEmail = "customer-$uniqueId`@example.com"
 $password = "CustomerPass123"
@@ -48,14 +47,29 @@ try {
     exit
 }
 
-Write-Host "3. Booking appointment with provider ID: $providerId..." -ForegroundColor Yellow
+Write-Host "2b. Fetching available doctor dynamically..." -ForegroundColor Yellow
 $headers = @{
     Authorization = "Bearer $token"
 }
+try {
+    $doctors = Invoke-RestMethod -Uri "$baseUrl/api/v1/appointments/doctors" -Method Get -Headers $headers
+    if ($doctors.Count -eq 0) {
+        throw "No doctors found in the database"
+    }
+    $doctor = $doctors[0]
+    $doctorId = $doctor.id
+    $doctorEmail = $doctor.email
+    Write-Host "✅ Found doctor: $doctorEmail (ID: $doctorId)" -ForegroundColor Green
+} catch {
+    Write-Error "❌ Failed to fetch doctor: $_"
+    exit
+}
+
+Write-Host "3. Booking appointment with doctor ID: $doctorId..." -ForegroundColor Yellow
 
 $randomOffset = Get-Random -Minimum 1 -Maximum 10000
 $bookingBody = @{
-    providerId = $providerId
+    doctorId = $doctorId
     startTime = [DateTime]::Now.AddDays(5).AddMinutes($randomOffset).ToString("yyyy-MM-ddTHH:mm:ss")
     endTime = [DateTime]::Now.AddDays(5).AddMinutes($randomOffset).AddMinutes(45).ToString("yyyy-MM-ddTHH:mm:ss")
     description = "Wellness therapy schedule consultation"
@@ -90,14 +104,15 @@ try {
     Write-Error "❌ Customer GET failed: $_"
 }
 
-Write-Host "5. Logging in as seeded PROVIDER (provider@vaidhyashala.com)..." -ForegroundColor Yellow
-$providerLoginBody = @{
-    email = "provider@vaidhyashala.com"
-    password = "ProviderPass123"
+$doctorPassword = if ($env:SEED_PROVIDER_PASSWORD) { $env:SEED_PROVIDER_PASSWORD } else { "AdminProvider123" }
+Write-Host "5. Logging in as seeded PROVIDER ($doctorEmail)..." -ForegroundColor Yellow
+$doctorLoginBody = @{
+    email = $doctorEmail
+    password = $doctorPassword
 } | ConvertTo-Json
 
 try {
-    $provLoginResponse = Invoke-RestMethod -Uri "$baseUrl/api/v1/auth/login" -Method Post -Body $providerLoginBody -ContentType "application/json"
+    $provLoginResponse = Invoke-RestMethod -Uri "$baseUrl/api/v1/auth/login" -Method Post -Body $doctorLoginBody -ContentType "application/json"
     $provToken = $provLoginResponse.accessToken
     Write-Host "✅ Provider Login successful!" -ForegroundColor Green
 } catch {
