@@ -32,15 +32,13 @@ import { SignUpFormValues, signUpSchema } from "@/lib/schema";
 import { REGISTRATION_ENDPOINT } from "@/lib/secrets";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarIcon } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [googleAutofilled, setGoogleAutofilled] = React.useState(false);
 
   const {
     handleSubmit,

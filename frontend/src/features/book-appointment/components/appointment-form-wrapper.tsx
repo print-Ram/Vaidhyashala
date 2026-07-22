@@ -11,6 +11,9 @@ export default async function AppointmentFormWrapper({
   const token = (await cookies()).get("accessToken")?.value;
   const { doctorId } = await params;
   const doctorData = await getDoctorInformation(doctorId);
+  if (!doctorData) {
+    return <>Something went wrong</>;
+  }
   console.log(doctorData);
   return (
     <CardContent>
