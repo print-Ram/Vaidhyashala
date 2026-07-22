@@ -1,10 +1,12 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter, Cinzel } from "next/font/google";
-import "./globals.css";
+import AuthProvider from "@/context/auth-provider";
 import { cn } from "@/lib/utils";
-import { GoogleOAuthProvider } from "@react-oauth/google";
+import type { Metadata } from "next";
+import { Cinzel, Geist, Geist_Mono, Inter } from "next/font/google";
+import { Toaster } from "sonner";
+import "./globals.css";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -32,29 +34,27 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
-
   return (
     <html
       lang="en"
       className={cn(
-        "h-full", 
-        "antialiased", 
-        geistSans.variable, 
-        geistMono.variable, 
-        "font-sans", 
+        "h-full",
+        "antialiased",
+        geistSans.variable,
+        geistMono.variable,
+        "font-sans",
         inter.variable,
-        cinzel.variable
+        cinzel.variable,
       )}
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-800">
-        <GoogleOAuthProvider clientId={googleClientId}>
-          {children}
-        </GoogleOAuthProvider>
+        <AuthProvider>
+          <NuqsAdapter>
+            {children}
+            <Toaster />
+          </NuqsAdapter>
+        </AuthProvider>
       </body>
     </html>
   );
 }
-
-
-

@@ -12,3 +12,10 @@ export const CUSTOMER_ENDPOINT = `${API_VERSION}/customers/me/profile`;
 export const APPOINTMENT_ENDPOINT = `${API_VERSION}/appointments`;
 export const MY_APPOINTMENT_ENDPOINT = `${API_VERSION}/appointments/me`;
 export const PROVIDERS_APPOINTMENT_ENDPOINT = `${API_VERSION}/appointments/providers`;
+
+export const DOCTORS_ENDPOINT = `${API_VERSION}/doctors`;
+export const DOCTOR_ENDPOINT = (id: string) => {
+  return `${API_VERSION}/doctors/${id}`;
+};
+
+export const DOCTOR_PROFILE_ENDPOINT = `${API_VERSION}/doctors/me/profile`;

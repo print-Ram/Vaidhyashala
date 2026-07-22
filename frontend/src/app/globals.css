@@ -10,17 +10,23 @@
   /* headline-xl → text-headline-xl */
   --text-headline-xl: var(--typography-headline-xl-font-size);
   --text-headline-xl--line-height: var(--typography-headline-xl-line-height);
-  --text-headline-xl--letter-spacing: var(--typography-headline-xl-letter-spacing);
+  --text-headline-xl--letter-spacing: var(
+    --typography-headline-xl-letter-spacing
+  );
   --text-headline-xl--font-weight: var(--typography-headline-xl-font-weight);
   /* headline-lg → text-headline-lg */
   --text-headline-lg: var(--typography-headline-lg-font-size);
   --text-headline-lg--line-height: var(--typography-headline-lg-line-height);
-  --text-headline-lg--letter-spacing: var(--typography-headline-lg-letter-spacing);
+  --text-headline-lg--letter-spacing: var(
+    --typography-headline-lg-letter-spacing
+  );
   --text-headline-lg--font-weight: var(--typography-headline-lg-font-weight);
   /* headline-md → text-headline-md */
   --text-headline-md: var(--typography-headline-md-font-size);
   --text-headline-md--line-height: var(--typography-headline-md-line-height);
-  --text-headline-md--letter-spacing: var(--typography-headline-md-letter-spacing);
+  --text-headline-md--letter-spacing: var(
+    --typography-headline-md-letter-spacing
+  );
   --text-headline-md--font-weight: var(--typography-headline-md-font-weight);
   /* copy-lg → text-copy-lg */
   --text-copy-lg: var(--typography-copy-lg-font-size);
@@ -37,7 +43,9 @@
   /* label-mono → text-label-mono */
   --text-label-mono: var(--typography-label-mono-font-size);
   --text-label-mono--line-height: var(--typography-label-mono-line-height);
-  --text-label-mono--letter-spacing: var(--typography-label-mono-letter-spacing);
+  --text-label-mono--letter-spacing: var(
+    --typography-label-mono-letter-spacing
+  );
   --text-label-mono--font-weight: var(--typography-label-mono-font-weight);
   /* button-text → text-button-text */
   --text-button-text: var(--typography-button-text-font-size);
