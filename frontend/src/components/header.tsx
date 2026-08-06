@@ -42,7 +42,6 @@ async function UserName({ user }: { user: "USER" | "DOCTOR" | "ADMIN" }) {
       }
 
       data = await resp.json();
-      console.log(data);
     } catch (err) {
       console.error("Something went wrong while logging");
     }

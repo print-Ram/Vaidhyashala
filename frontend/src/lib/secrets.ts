@@ -6,7 +6,7 @@ const AUTH_ENDPOINT = `${API_VERSION}/auth`;
 export const REGISTRATION_ENDPOINT = `${AUTH_ENDPOINT}/register`;
 export const LOGIN_ENDPOINT = `${AUTH_ENDPOINT}/login`;
 export const GOOGLE_LOGIN_ENDPOINT = `${AUTH_ENDPOINT}/google`;
-
+export const LOGOUT_ENDPOINT = `${AUTH_ENDPOINT}/logout`;
 export const CUSTOMER_ENDPOINT = `${API_VERSION}/customers/me/profile`;
 
 export const APPOINTMENT_ENDPOINT = `${API_VERSION}/appointments`;

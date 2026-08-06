@@ -12,6 +12,11 @@ export default function GoogleButton({
 }: GoogleButtonProps) {
   return (
     <Button
+      // onClick={() =>
+      //   window.location.assign(
+      //     "https://vaidhyashala-backend-393498271942.asia-south1.run.app/oauth2/authorization/google",
+      //   )
+      // }
       className={`h-auto py-2.5 w-full transition-all duration-300 hover:shadow active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 ${className || ""}`}
       variant={"outline"}
       {...props}

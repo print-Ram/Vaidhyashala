@@ -32,6 +32,7 @@ export default function LoginPage() {
     handleSubmit,
     control,
     formState: { isSubmitting },
+    reset,
   } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -56,7 +57,7 @@ export default function LoginPage() {
         throw new Error(result.message || "Invalid email or password.");
       }
 
-      console.log(result);
+      reset();
 
       document.cookie = `accessToken=${result.accessToken}; path=/; max-age=${result.expiresIn}; SameSite=Lax`;
 

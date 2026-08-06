@@ -14,7 +14,6 @@ export default async function AppointmentFormWrapper({
   if (!doctorData) {
     return <>Something went wrong</>;
   }
-  console.log(doctorData);
   return (
     <CardContent>
       <AppointmentForm token={token} providerId={doctorData.userId} />

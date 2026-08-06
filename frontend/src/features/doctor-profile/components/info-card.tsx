@@ -55,7 +55,6 @@ export default async function InfoCard() {
 
 async function DoctorName({ doctorId }: { doctorId: string }) {
   let doctorData = await getDoctorInformation(doctorId);
-  console.log(doctorData);
   return (
     <>
       <span className="bg-indigo-50 border block border-indigo-100 font-mono text-indigo-700 px-3.5 py-1 text-xs w-fit rounded-full uppercase tracking-wider mx-auto md:mx-0 font-medium">

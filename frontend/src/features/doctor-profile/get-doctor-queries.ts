@@ -8,9 +8,7 @@ export async function getDoctorInformation(doctorId: string) {
     if (!resp.ok) {
       throw new Error("Failed to fetch doctor's data");
     }
-    console.log(resp);
     const respJson = await resp.json();
-    console.log(respJson);
     const result = DoctorSchema.safeParse(respJson);
     if (!result.success) {
       throw new Error(

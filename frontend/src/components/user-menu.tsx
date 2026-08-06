@@ -6,6 +6,7 @@ import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { LogIn, LogOut, Menu, User } from "lucide-react";
 import LogoutButton from "./logout-button";
+import { signOut } from "@/lib/actions";
 
 export default function UserMenu({
   user,
@@ -40,7 +41,7 @@ export default function UserMenu({
           <Link href="/doctor/appointments">My Appointments</Link>
         )}
 
-        <LogoutButton>
+        <LogoutButton onClick={() => signOut()}>
           <LogOut />
           SIGN OUT
         </LogoutButton>

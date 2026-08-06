@@ -44,6 +44,7 @@ export default function SignUpPage() {
     handleSubmit,
     control,
     formState: { isSubmitting },
+    reset,
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -79,6 +80,7 @@ export default function SignUpPage() {
             "Registration failed. Please check your credentials.",
         );
       }
+      reset();
 
       router.push("/doctor/login");
     } catch (err) {
